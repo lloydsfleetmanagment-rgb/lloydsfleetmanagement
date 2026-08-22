@@ -74,6 +74,8 @@ function OperatorConsole() {
   const [trips, setTrips] = useState("");
   const [shift, setShift] = useState(currentShift());
   const [remarks, setRemarks] = useState("");
+  const [empId, setEmpId] = useState("");
+  const [empName, setEmpName] = useState("");
   const [saving, setSaving] = useState(false);
   const [invalidOpen, setInvalidOpen] = useState(false);
   
@@ -173,14 +175,18 @@ function OperatorConsole() {
       toast.error(t("op.completeFields"));
       return;
     }
+    if (!empId.trim() || !empName.trim()) {
+      toast.error("Enter your employee ID and name");
+      return;
+    }
     if (equipmentBlocked) {
       setInvalidOpen(true);
       await writeAudit({
         action: "INVALID_EQUIPMENT_ATTEMPT",
         entity: "operator_logs",
         user_id: user?.id ?? null,
-        employee_id: profile?.employee_id ?? null,
-        employee_name: profile?.employee_name ?? null,
+        employee_id: empId.trim(),
+        employee_name: empName.trim(),
         details: { destination, equipment: selectedEquipment.code, equipment_type: selectedEquipment.equipment_type },
       });
       return;
@@ -189,8 +195,8 @@ function OperatorConsole() {
     const { error } = await supabase.from("operator_logs").insert({
       shift,
       user_id: user?.id as string,
-      employee_id: profile?.employee_id ?? null,
-      employee_name: profile?.employee_name ?? null,
+      employee_id: empId.trim(),
+      employee_name: empName.trim(),
       equipment_id: selectedEquipment.id,
       equipment_code: selectedEquipment.code,
       equipment_type: selectedEquipment.equipment_type,
@@ -223,7 +229,20 @@ function OperatorConsole() {
     void qc.invalidateQueries();
   };
 
-
+  // Shared operator login: trips are attributed by the employee ID/name typed on each entry.
+  const shiftByOperator = useMemo(() => {
+    const map = new Map<string, { key: string; empId: string; name: string; trips: number; tonnes: number; entries: number }>();
+    for (const l of myLogs) {
+      if (l.shift !== shift) continue;
+      const key = (l.employee_id ?? l.employee_name ?? "unknown").toString();
+      const row = map.get(key) ?? { key, empId: l.employee_id ?? "—", name: l.employee_name ?? "Unnamed", trips: 0, tonnes: 0, entries: 0 };
+      row.trips += l.trips;
+      row.tonnes += Number(l.quantity_t);
+      row.entries += 1;
+      map.set(key, row);
+    }
+    return [...map.values()].sort((a, b) => b.trips - a.trips);
+  }, [myLogs, shift]);
 
   const todayTotals = useMemo(() => {
     const tonnes = myLogs.reduce((s, l) => s + Number(l.quantity_t), 0);
@@ -267,6 +286,28 @@ function OperatorConsole() {
           <p className="text-sm text-muted-foreground">{t("op.tripHelp")}</p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Employee ID</Label>
+              <Input
+                value={empId}
+                onChange={(e) => {
+                  beginEntry();
+                  setEmpId(e.target.value);
+                }}
+                placeholder="LM-10234"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Employee name</Label>
+              <Input
+                value={empName}
+                onChange={(e) => {
+                  beginEntry();
+                  setEmpName(e.target.value);
+                }}
+                placeholder="Operator name"
+              />
+            </div>
             <div className="space-y-2">
               <Label>{t("op.equipment")}</Label>
               <Select
@@ -449,13 +490,31 @@ function OperatorConsole() {
         </Panel>
 
         <Panel className="p-6 lg:col-span-2">
-          <h2 className="text-lg font-semibold">{t("op.myEntries")}</h2>
+          <h2 className="text-lg font-semibold">Trips by operator · Shift {shift}</h2>
+          <div className="mt-4 space-y-2">
+            {shiftByOperator.length === 0 && <p className="text-sm text-muted-foreground">{t("op.noEntries")}</p>}
+            {shiftByOperator.map((o) => (
+              <div key={o.key} className="animate-fade-up rounded-xl border border-border bg-secondary/40 p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">{o.name}</span>
+                  <span className="font-mono tabular-nums text-primary">{o.trips} trips</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {o.empId} · {fmtNumber(o.tonnes)} t · {o.entries} entries
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <h2 className="mt-6 text-lg font-semibold">{t("op.myEntries")}</h2>
           <div className="mt-4 space-y-2">
             {myLogs.length === 0 && <p className="text-sm text-muted-foreground">{t("op.noEntries")}</p>}
             {myLogs.map((l) => (
               <div key={l.id} className="animate-fade-up rounded-xl border border-border bg-secondary/40 p-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{l.equipment_code}</span>
+                  <span className="font-medium">
+                    {l.employee_name ?? "—"} · {l.equipment_code}
+                  </span>
                   <span className="font-mono tabular-nums text-primary">{fmtNumber(Number(l.quantity_t))} t</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
