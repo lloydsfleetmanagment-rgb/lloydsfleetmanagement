@@ -56,6 +56,7 @@ function OperatorConsole() {
   const { t, lang, setLang } = useI18n();
   const qc = useQueryClient();
   const callEmergency = useServerFn(placeEmergencyCall);
+  const emailEmergency = useServerFn(sendEmergencyEmail);
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -243,7 +244,7 @@ function OperatorConsole() {
     // Email the full detail sheet immediately — no extra confirmation step.
     let emailStatus = "failed";
     try {
-      const mail = await sendEmergencyEmail({
+      const mail = await emailEmergency({
         data: {
           alertId: (inserted?.id ?? "").slice(0, 8).toUpperCase(),
           employeeName: profile?.employee_name ?? "Operator",
