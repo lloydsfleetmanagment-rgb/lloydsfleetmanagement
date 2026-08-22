@@ -556,7 +556,9 @@ function OperatorConsole() {
                   <span className="font-mono tabular-nums text-primary">{fmtNumber(Number(l.quantity_t))} t</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {l.excavator ? `${l.excavator} · ` : ""}
+                  {(l as { excavator?: string | null }).excavator
+                    ? `${(l as { excavator?: string | null }).excavator} · `
+                    : ""}
                   {l.material_code} → {l.destination_code} · {l.trips} · L {l.loading_time_min}m / U {l.unloading_time_min}m
                 </p>
               </div>
