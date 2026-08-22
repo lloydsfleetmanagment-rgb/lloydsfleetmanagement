@@ -1,0 +1,1 @@
+ALTER TABLE public.operator_logs ADD COLUMN IF NOT EXISTS excavator text;

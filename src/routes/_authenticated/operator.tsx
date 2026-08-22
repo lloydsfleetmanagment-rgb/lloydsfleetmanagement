@@ -11,6 +11,7 @@ import { sendEmergencyEmail } from "@/lib/emergency-email.functions";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EMERGENCY_CALL_NUMBER,
+  EXCAVATOR_GROUPS,
   EMERGENCY_NOTIFY_EMAIL,
   SHIFTS,
   currentShift,
@@ -23,7 +24,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +77,7 @@ function OperatorConsole() {
 
   const [equipmentId, setEquipmentId] = useState("");
   const [material, setMaterial] = useState("");
+  const [excavator, setExcavator] = useState("");
   const [destination, setDestination] = useState("");
   const [trips, setTrips] = useState("");
   const [shift, setShift] = useState(currentShift());
@@ -141,6 +151,7 @@ function OperatorConsole() {
       const d = JSON.parse(raw) as Record<string, string>;
       setEquipmentId(d['equipmentId'] ?? "");
       setMaterial(d['material'] ?? "");
+      setExcavator(d['excavator'] ?? "");
       setTrips(d['trips'] ?? "");
       setRemarks(d['remarks'] ?? "");
     } catch {
@@ -150,13 +161,14 @@ function OperatorConsole() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, trips, remarks }));
+      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, excavator, trips, remarks }));
     }, 600);
     return () => clearTimeout(timer);
-  }, [equipmentId, material, trips, remarks]);
+  }, [equipmentId, material, excavator, trips, remarks]);
 
   const reset = () => {
     setTrips("");
+    setExcavator("");
     setRemarks("");
     setDestination("");
     setDestPickedAt(null);
@@ -166,7 +178,7 @@ function OperatorConsole() {
   };
 
   const save = async () => {
-    if (!selectedEquipment || !material || !destination || !trips) {
+    if (!selectedEquipment || !material || !excavator || !destination || !trips) {
       toast.error(t("op.completeFields"));
       return;
     }
@@ -192,6 +204,7 @@ function OperatorConsole() {
       equipment_code: selectedEquipment.code,
       equipment_type: selectedEquipment.equipment_type,
       material_code: material,
+      excavator,
       destination_code: destination,
       trips: Number(trips),
       loading_time_min: liveLoading,
@@ -210,7 +223,7 @@ function OperatorConsole() {
       user_id: user?.id ?? null,
       employee_id: profile?.employee_id ?? null,
       employee_name: profile?.employee_name ?? null,
-      details: { equipment: selectedEquipment.code, material, destination, trips: Number(trips), quantity_t: quantity },
+      details: { equipment: selectedEquipment.code, material, excavator, destination, trips: Number(trips), quantity_t: quantity },
     });
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1800);
@@ -412,6 +425,33 @@ function OperatorConsole() {
             </div>
 
             <div className="space-y-2">
+              <Label>{t("op.excavator")}</Label>
+              <Select
+                value={excavator}
+                onValueChange={(v) => {
+                  beginEntry();
+                  setExcavator(v);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("op.selectExcavator")} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {EXCAVATOR_GROUPS.map((g) => (
+                    <SelectGroup key={g.group}>
+                      <SelectLabel>{g.group}</SelectLabel>
+                      {g.items.map((x) => (
+                        <SelectItem key={x} value={x}>
+                          {x}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>{t("op.destination")}</Label>
               <Select value={destination} onValueChange={pickDestination} disabled={!material}>
                 <SelectTrigger>
@@ -516,6 +556,9 @@ function OperatorConsole() {
                   <span className="font-mono tabular-nums text-primary">{fmtNumber(Number(l.quantity_t))} t</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
+                  {(l as { excavator?: string | null }).excavator
+                    ? `${(l as { excavator?: string | null }).excavator} · `
+                    : ""}
                   {l.material_code} → {l.destination_code} · {l.trips} · L {l.loading_time_min}m / U {l.unloading_time_min}m
                 </p>
               </div>

@@ -1,4 +1,23 @@
 export const SHIFTS = ["A", "B", "C"] as const;
+
+/** Loading excavators / shovels available at the Surjagarh lease. */
+export const EXCAVATOR_GROUPS = [
+  {
+    group: "1200 Diesel",
+    items: ["1200 DIESEL-1", "1200 DIESEL-2", "1200 DIESEL-3"],
+  },
+  {
+    group: "1200 EV",
+    // EV 1200 machines 1–9, machine 8 is not in service
+    items: [1, 2, 3, 4, 5, 6, 7, 9].map((n) => `EV 1200-${n}`),
+  },
+  {
+    group: "2500 Class",
+    items: ["2500 DIESEL MACHINE-1", "2500 SHOVEL", "EV 2500 MACHINE-1"],
+  },
+] as const;
+
+export const EXCAVATORS = EXCAVATOR_GROUPS.flatMap((g) => g.items as readonly string[]);
 export type Shift = (typeof SHIFTS)[number];
 
 export const EQUIPMENT_STATUSES = ["ACTIVE", "IDLE", "BREAKDOWN", "MAINTENANCE"] as const;
