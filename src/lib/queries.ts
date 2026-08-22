@@ -102,7 +102,7 @@ export function useDigFaces() {
   });
 }
 
-export function useOperatorLogs(opts?: { date?: string; userId?: string; limit?: number }) {
+export function useOperatorLogs(opts?: { date?: string; userId?: string; limit?: number; live?: boolean }) {
   const date = opts?.date;
   return useQuery({
     queryKey: ["operator_logs", date ?? "all", opts?.userId ?? "all", opts?.limit ?? 500],
@@ -114,11 +114,12 @@ export function useOperatorLogs(opts?: { date?: string; userId?: string; limit?:
       if (error) throw error;
       return (data ?? []) as OperatorLog[];
     },
+    ...(opts?.live ? { refetchInterval: 30_000, refetchOnWindowFocus: true } : {}),
   });
 }
 
-export function useTodayLogs() {
-  return useOperatorLogs({ date: todayISO(), limit: 1000 });
+export function useTodayLogs(date?: string) {
+  return useOperatorLogs({ date: date ?? todayISO(), limit: 1000, live: true });
 }
 
 export function useProductionEntries(date?: string) {
