@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Languages, Loader2, Save, Siren } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Languages, Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
-import { placeEmergencyCall } from "@/lib/emergency.functions";
-import { sendEmergencyEmail } from "@/lib/emergency-email.functions";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
-  EMERGENCY_CALL_NUMBER,
   EXCAVATOR_GROUPS,
-  EMERGENCY_NOTIFY_EMAIL,
   SHIFTS,
   currentShift,
   fmtNumber,
@@ -63,8 +58,6 @@ function OperatorConsole() {
   const { profile, user } = useAuth();
   const { t, lang, setLang } = useI18n();
   const qc = useQueryClient();
-  const callEmergency = useServerFn(placeEmergencyCall);
-  const emailEmergency = useServerFn(sendEmergencyEmail);
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -83,7 +76,7 @@ function OperatorConsole() {
   const [remarks, setRemarks] = useState("");
   const [saving, setSaving] = useState(false);
   const [invalidOpen, setInvalidOpen] = useState(false);
-  const [sendingEmergency, setSendingEmergency] = useState(false);
+  
   const [savedFlash, setSavedFlash] = useState(false);
 
   // Automatic timing: the loading clock starts the moment the operator begins
@@ -230,94 +223,6 @@ function OperatorConsole() {
     void qc.invalidateQueries();
   };
 
-  const raiseEmergency = async () => {
-    if (sendingEmergency) return;
-    setSendingEmergency(true);
-    const msg = "Emergency assistance required";
-    toast.warning(t("op.emergency"));
-    const { data: inserted, error } = await supabase
-      .from("emergency_alerts")
-      .insert({
-        user_id: user?.id as string,
-        employee_id: profile?.employee_id ?? null,
-        employee_name: profile?.employee_name ?? null,
-        login_id: profile?.email ?? user?.email ?? null,
-        shift,
-        equipment_code: selectedEquipment?.code ?? null,
-        material_code: material || null,
-        destination_code: destination || null,
-        message: msg,
-      })
-      .select("id, created_at")
-      .single();
-    if (error) {
-      toast.error(error.message);
-      setSendingEmergency(false);
-      return;
-    }
-
-    // Email the full detail sheet immediately — no extra confirmation step.
-    let emailStatus = "failed";
-    try {
-      const mail = await emailEmergency({
-        data: {
-          alertId: (inserted?.id ?? "").slice(0, 8).toUpperCase(),
-          employeeName: profile?.employee_name ?? "Operator",
-          employeeId: profile?.employee_id ?? "unknown",
-          loginId: profile?.email ?? user?.email ?? "unknown",
-          shift,
-          equipment: selectedEquipment?.code ?? "not selected",
-          material: material || "not selected",
-          destination: destination || "Surjagarh mine lease",
-          message: msg,
-          raisedAt: new Date(inserted?.created_at ?? Date.now()).toLocaleString("en-GB", {
-            timeZone: "Asia/Kolkata",
-          }),
-        },
-      });
-      emailStatus = mail.status;
-    } catch {
-      emailStatus = "failed";
-    }
-
-    // OmniDimension AI agent places the voice call to the emergency number.
-    let callStatus = "failed";
-    try {
-      const res = await callEmergency({
-        data: {
-          employeeName: profile?.employee_name ?? "Operator",
-          employeeId: profile?.employee_id ?? "unknown",
-          location: destination || "Surjagarh mine lease",
-          equipment: selectedEquipment?.code ?? "not selected",
-          shift,
-          message: msg,
-        },
-      });
-      callStatus = res.status;
-    } catch {
-      callStatus = "failed";
-    }
-
-    await writeAudit({
-      action: "EMERGENCY_CREATED",
-      entity: "emergency_alerts",
-      entity_id: inserted?.id,
-      user_id: user?.id ?? null,
-      employee_id: profile?.employee_id ?? null,
-      employee_name: profile?.employee_name ?? null,
-      details: {
-        notify_email: EMERGENCY_NOTIFY_EMAIL,
-        email_status: emailStatus,
-        call_number: EMERGENCY_CALL_NUMBER,
-        call_status: callStatus,
-        equipment: selectedEquipment?.code ?? null,
-        shift,
-      },
-    });
-    setSendingEmergency(false);
-    if (emailStatus === "sent") toast.success(`${t("op.emergencySent")} · ${EMERGENCY_NOTIFY_EMAIL}`);
-    else toast.warning(`${t("op.emergencySent")} · email pending`);
-  };
 
 
   const todayTotals = useMemo(() => {
@@ -346,14 +251,6 @@ function OperatorConsole() {
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              variant="destructive"
-              className="animate-alarm rounded-full"
-              disabled={sendingEmergency}
-              onClick={() => void raiseEmergency()}
-            >
-              <Siren className="mr-2 h-4 w-4" /> {t("op.emergency")}
-            </Button>
           </div>
         }
       />
