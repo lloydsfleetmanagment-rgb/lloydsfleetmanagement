@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Sign in — LLOYDS FLEETIQ" },
       {
         property: "og:description",
-        content: "Fleet, production and crusher intelligence for Surjagarh Iron Ore Mine.",
+        content: "Fleet, production and screens plant intelligence for Surjagarh Iron Ore Mine.",
       },
     ],
   }),

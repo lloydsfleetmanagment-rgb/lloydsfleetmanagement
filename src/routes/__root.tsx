@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Fleet management for Surjagarh Iron Ore Mine: dumpers, Sany trucks, dig faces, crushers and production.",
+          "Fleet management for Surjagarh Iron Ore Mine: dumpers, Sany trucks, dig faces, screens plant and production.",
       },
       { name: "author", content: "Lloyds Metals" },
       { property: "og:type", content: "website" },

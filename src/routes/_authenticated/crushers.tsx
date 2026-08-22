@@ -16,10 +16,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/crushers")({
   head: () => ({
     meta: [
-      { title: "Crushers — LLOYDS FLEETIQ" },
-      { name: "description", content: "TH-1 to TH-5 crusher status, feed rate, downtime and material received." },
-      { property: "og:title", content: "Crushers — LLOYDS FLEETIQ" },
-      { property: "og:description", content: "Crusher performance monitoring at Surjagarh." },
+      { title: "Screens Plant — LLOYDS FLEETIQ" },
+      { name: "description", content: "TH-1 to TH-5 screens plant status, feed rate, downtime and material received." },
+      { property: "og:title", content: "Screens Plant — LLOYDS FLEETIQ" },
+      { property: "og:description", content: "Screens plant performance monitoring at Surjagarh." },
     ],
   }),
   component: CrushersPage,
@@ -46,14 +46,14 @@ function CrushersPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Crusher updated");
+    toast.success("Screens plant updated");
     void qc.invalidateQueries({ queryKey: ["crushers"] });
   };
 
   return (
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
-        title="Crusher Monitoring"
+        title="Screens Plant Monitoring"
         subtitle="TH-1 to TH-5 · TH-2 and TH-3 accept SANY equipment only"
       />
 

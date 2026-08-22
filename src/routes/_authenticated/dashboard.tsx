@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Factory, Gauge, Layers, Truck } from "lucide-react";
+import { Activity, Layers, Truck } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { KpiCard, LoadingBlock, Panel, Progress3D, SectionHeader } from "@/components/fleetiq/Cards";
 import { MineMap } from "@/components/fleetiq/MineMap";
@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — LLOYDS FLEETIQ" },
-      { name: "description", content: "Live production, fleet and crusher KPIs for the Surjagarh Iron Ore Mine." },
+      { name: "description", content: "Live production, fleet and screens plant KPIs for the Surjagarh Iron Ore Mine." },
       { property: "og:title", content: "Dashboard — LLOYDS FLEETIQ" },
-      { property: "og:description", content: "Live production, fleet and crusher KPIs for Surjagarh." },
+      { property: "og:description", content: "Live production, fleet and screens plant KPIs for Surjagarh." },
     ],
   }),
   component: DashboardPage,
@@ -42,10 +42,7 @@ function DashboardPage() {
     const shale = logs.filter((l) => l.material_code === "SHALE").reduce((s, l) => s + Number(l.quantity_t), 0);
     const active = equipment.filter((e) => e.status === "ACTIVE").length;
     const trips = logs.reduce((s, l) => s + l.trips, 0);
-    const pipeline = logs
-      .filter((l) => ["TH-1", "TH-2", "TH-3", "TH-4", "TH-5"].includes(l.destination_code))
-      .reduce((s, l) => s + Number(l.quantity_t), 0);
-    return { total, rom, bhq, shale, active, trips, pipeline };
+    return { total, rom, bhq, shale, active, trips };
   }, [logs, equipment]);
 
   const hourly = useMemo(() => {
@@ -124,9 +121,8 @@ function DashboardPage() {
         <KpiCard label="BHQ" value={stats.bhq} unit="t" hint="Banded hematite quartzite" icon={<Layers className="h-4 w-4" />} delay={120} />
         <KpiCard label="SHALE" value={stats.shale} unit="t" hint="Waste / shale dispatch" icon={<Layers className="h-4 w-4" />} delay={180} />
         <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={240} />
-        <KpiCard label="Shovel Utilization" value={Math.min(100, (stats.trips / 600) * 100)} unit="%" digits={1} icon={<Gauge className="h-4 w-4" />} delay={300} />
-        <KpiCard label="Pipeline Throughput" value={stats.pipeline} unit="t" hint="ROM to TH crushers" icon={<Factory className="h-4 w-4" />} delay={360} />
-        <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={420} />
+        <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={300} />
+
       </div>
 
 
@@ -212,7 +208,7 @@ function DashboardPage() {
           </Panel>
 
           <Panel className="p-6">
-            <h2 className="text-lg font-semibold">Crusher intake today</h2>
+            <h2 className="text-lg font-semibold">Screens Plant intake today</h2>
             <div className="mt-4 space-y-3">
               {crusherRom.map((c) => (
                 <div key={c.code} className="flex items-center justify-between rounded-xl border border-border bg-secondary/40 px-3 py-2.5">
@@ -265,7 +261,7 @@ function DashboardPage() {
 
       <Panel className="mt-6 p-6">
         <h2 className="text-lg font-semibold">Lease overview — 348 Ha</h2>
-        <p className="text-sm text-muted-foreground">Stylised mine layout with live dig-face and crusher activity.</p>
+        <p className="text-sm text-muted-foreground">Stylised mine layout with live dig-face and screens plant activity.</p>
         <MineMap logs={logs} />
       </Panel>
     </div>
