@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
 import { placeEmergencyCall } from "@/lib/emergency.functions";
+import { sendEmergencyEmail } from "@/lib/emergency-email.functions";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EMERGENCY_CALL_NUMBER,
