@@ -42,10 +42,7 @@ function DashboardPage() {
     const shale = logs.filter((l) => l.material_code === "SHALE").reduce((s, l) => s + Number(l.quantity_t), 0);
     const active = equipment.filter((e) => e.status === "ACTIVE").length;
     const trips = logs.reduce((s, l) => s + l.trips, 0);
-    const pipeline = logs
-      .filter((l) => ["TH-1", "TH-2", "TH-3", "TH-4", "TH-5"].includes(l.destination_code))
-      .reduce((s, l) => s + Number(l.quantity_t), 0);
-    return { total, rom, bhq, shale, active, trips, pipeline };
+    return { total, rom, bhq, shale, active, trips };
   }, [logs, equipment]);
 
   const hourly = useMemo(() => {
