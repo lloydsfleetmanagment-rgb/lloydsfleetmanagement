@@ -257,13 +257,14 @@ function LoginPage() {
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="operator">Operator</SelectItem>
                       <SelectItem value="supervisor">Supervisor</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Operators share a single console login — new accounts are for admins and supervisors.
+                  Select the access level for this account. Operators can use the trip console once signed in.
                 </p>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
