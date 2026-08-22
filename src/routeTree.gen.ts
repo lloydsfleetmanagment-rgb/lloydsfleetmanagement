@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedCrushersRouteImport } from './routes/_authenticated/crushers'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDigFacesRouteImport } from './routes/_authenticated/dig-faces'
 import { Route as AuthenticatedFleetRouteImport } from './routes/_authenticated/fleet'
 import { Route as AuthenticatedOperatorRouteImport } from './routes/_authenticated/operator'
+import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,9 +27,19 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCrushersRoute = AuthenticatedCrushersRouteImport.update({
+  id: '/crushers',
+  path: '/crushers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDigFacesRoute = AuthenticatedDigFacesRouteImport.update({
+  id: '/dig-faces',
+  path: '/dig-faces',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFleetRoute = AuthenticatedFleetRouteImport.update({
@@ -39,39 +52,70 @@ const AuthenticatedOperatorRoute = AuthenticatedOperatorRouteImport.update({
   path: '/operator',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProductionRoute = AuthenticatedProductionRouteImport.update({
+  id: '/production',
+  path: '/production',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/crushers': typeof AuthenticatedCrushersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dig-faces': typeof AuthenticatedDigFacesRoute
   '/fleet': typeof AuthenticatedFleetRoute
   '/operator': typeof AuthenticatedOperatorRoute
+  '/production': typeof AuthenticatedProductionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/crushers': typeof AuthenticatedCrushersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dig-faces': typeof AuthenticatedDigFacesRoute
   '/fleet': typeof AuthenticatedFleetRoute
   '/operator': typeof AuthenticatedOperatorRoute
+  '/production': typeof AuthenticatedProductionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/crushers': typeof AuthenticatedCrushersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dig-faces': typeof AuthenticatedDigFacesRoute
   '/_authenticated/fleet': typeof AuthenticatedFleetRoute
   '/_authenticated/operator': typeof AuthenticatedOperatorRoute
+  '/_authenticated/production': typeof AuthenticatedProductionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/fleet' | '/operator'
+  fullPaths:
+    | '/'
+    | '/crushers'
+    | '/dashboard'
+    | '/dig-faces'
+    | '/fleet'
+    | '/operator'
+    | '/production'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/fleet' | '/operator'
+  to:
+    | '/'
+    | '/crushers'
+    | '/dashboard'
+    | '/dig-faces'
+    | '/fleet'
+    | '/operator'
+    | '/production'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/crushers'
     | '/_authenticated/dashboard'
+    | '/_authenticated/dig-faces'
     | '/_authenticated/fleet'
     | '/_authenticated/operator'
+    | '/_authenticated/production'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,11 +139,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/crushers': {
+      id: '/_authenticated/crushers'
+      path: '/crushers'
+      fullPath: '/crushers'
+      preLoaderRoute: typeof AuthenticatedCrushersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dig-faces': {
+      id: '/_authenticated/dig-faces'
+      path: '/dig-faces'
+      fullPath: '/dig-faces'
+      preLoaderRoute: typeof AuthenticatedDigFacesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/fleet': {
@@ -116,19 +174,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOperatorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/production': {
+      id: '/_authenticated/production'
+      path: '/production'
+      fullPath: '/production'
+      preLoaderRoute: typeof AuthenticatedProductionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCrushersRoute: typeof AuthenticatedCrushersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDigFacesRoute: typeof AuthenticatedDigFacesRoute
   AuthenticatedFleetRoute: typeof AuthenticatedFleetRoute
   AuthenticatedOperatorRoute: typeof AuthenticatedOperatorRoute
+  AuthenticatedProductionRoute: typeof AuthenticatedProductionRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCrushersRoute: AuthenticatedCrushersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDigFacesRoute: AuthenticatedDigFacesRoute,
   AuthenticatedFleetRoute: AuthenticatedFleetRoute,
   AuthenticatedOperatorRoute: AuthenticatedOperatorRoute,
+  AuthenticatedProductionRoute: AuthenticatedProductionRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
