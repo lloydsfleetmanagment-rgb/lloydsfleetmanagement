@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
 import { placeEmergencyCall } from "@/lib/emergency.functions";
+import { sendEmergencyEmail } from "@/lib/emergency-email.functions";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EMERGENCY_CALL_NUMBER,
@@ -55,6 +56,7 @@ function OperatorConsole() {
   const { t, lang, setLang } = useI18n();
   const qc = useQueryClient();
   const callEmergency = useServerFn(placeEmergencyCall);
+  const emailEmergency = useServerFn(sendEmergencyEmail);
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -218,20 +220,49 @@ function OperatorConsole() {
   };
 
   const raiseEmergency = async () => {
-    const { error } = await supabase.from("emergency_alerts").insert({
-      user_id: user?.id as string,
-      employee_id: profile?.employee_id ?? null,
-      employee_name: profile?.employee_name ?? null,
-      login_id: profile?.email ?? user?.email ?? null,
-      shift,
-      equipment_code: selectedEquipment?.code ?? null,
-      material_code: material || null,
-      destination_code: destination || null,
-      message: emergencyMsg || "Emergency assistance required",
-    });
+    const msg = emergencyMsg || "Emergency assistance required";
+    const { data: inserted, error } = await supabase
+      .from("emergency_alerts")
+      .insert({
+        user_id: user?.id as string,
+        employee_id: profile?.employee_id ?? null,
+        employee_name: profile?.employee_name ?? null,
+        login_id: profile?.email ?? user?.email ?? null,
+        shift,
+        equipment_code: selectedEquipment?.code ?? null,
+        material_code: material || null,
+        destination_code: destination || null,
+        message: msg,
+      })
+      .select("id, created_at")
+      .single();
     if (error) {
       toast.error(error.message);
       return;
+    }
+
+    // Email the full detail sheet immediately — no extra confirmation step.
+    let emailStatus = "failed";
+    try {
+      const mail = await emailEmergency({
+        data: {
+          alertId: (inserted?.id ?? "").slice(0, 8).toUpperCase(),
+          employeeName: profile?.employee_name ?? "Operator",
+          employeeId: profile?.employee_id ?? "unknown",
+          loginId: profile?.email ?? user?.email ?? "unknown",
+          shift,
+          equipment: selectedEquipment?.code ?? "not selected",
+          material: material || "not selected",
+          destination: destination || "Surjagarh mine lease",
+          message: msg,
+          raisedAt: new Date(inserted?.created_at ?? Date.now()).toLocaleString("en-GB", {
+            timeZone: "Asia/Kolkata",
+          }),
+        },
+      });
+      emailStatus = mail.status;
+    } catch {
+      emailStatus = "failed";
     }
 
     // OmniDimension AI agent places the voice call to the emergency number.
@@ -244,7 +275,7 @@ function OperatorConsole() {
           location: destination || "Surjagarh mine lease",
           equipment: selectedEquipment?.code ?? "not selected",
           shift,
-          message: emergencyMsg || "Emergency assistance required",
+          message: msg,
         },
       });
       callStatus = res.status;
@@ -255,11 +286,13 @@ function OperatorConsole() {
     await writeAudit({
       action: "EMERGENCY_CREATED",
       entity: "emergency_alerts",
+      entity_id: inserted?.id,
       user_id: user?.id ?? null,
       employee_id: profile?.employee_id ?? null,
       employee_name: profile?.employee_name ?? null,
       details: {
         notify_email: EMERGENCY_NOTIFY_EMAIL,
+        email_status: emailStatus,
         call_number: EMERGENCY_CALL_NUMBER,
         call_status: callStatus,
         equipment: selectedEquipment?.code ?? null,
@@ -268,9 +301,10 @@ function OperatorConsole() {
     });
     setEmergencyOpen(false);
     setEmergencyMsg("");
-    if (callStatus === "calling") toast.success(`${t("op.emergencySent")} · ${EMERGENCY_CALL_NUMBER}`);
-    else toast.warning(`${t("op.emergencySent")} · voice call pending`);
+    if (emailStatus === "sent") toast.success(`${t("op.emergencySent")} · ${EMERGENCY_NOTIFY_EMAIL}`);
+    else toast.warning(`${t("op.emergencySent")} · email pending`);
   };
+
 
   const todayTotals = useMemo(() => {
     const tonnes = myLogs.reduce((s, l) => s + Number(l.quantity_t), 0);
