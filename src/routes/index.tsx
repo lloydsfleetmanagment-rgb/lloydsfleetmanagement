@@ -71,7 +71,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
   const [introDone, setIntroDone] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -90,22 +90,22 @@ function LoginPage() {
   }, [loading, session, navigate]);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("fleetiq:email");
-    if (saved) setEmail(saved);
+    const saved = window.localStorage.getItem("fleetiq:username");
+    if (saved) setUsername(saved);
   }, []);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const id = email.includes("@") ? email.trim() : `${email.trim()}@fleetiq.local`;
+    const id = username.includes("@") ? username.trim() : `${username.trim()}@fleetiq.local`;
     const { error } = await supabase.auth.signInWithPassword({ email: id, password });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    if (remember) window.localStorage.setItem("fleetiq:email", email.trim());
-    else window.localStorage.removeItem("fleetiq:email");
+    if (remember) window.localStorage.setItem("fleetiq:username", username.trim());
+    else window.localStorage.removeItem("fleetiq:username");
     toast.success("Welcome back");
     void navigate({ to: "/dashboard" });
   };
@@ -113,7 +113,7 @@ function LoginPage() {
   const signUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const id = email.includes("@") ? email.trim() : `${email.trim()}@fleetiq.local`;
+    const id = username.includes("@") ? username.trim() : `${username.trim()}@fleetiq.local`;
     const { error } = await supabase.auth.signUp({
       email: id,
       password,
@@ -129,17 +129,6 @@ function LoginPage() {
     }
     toast.success("Account created — signing you in");
     void navigate({ to: "/dashboard" });
-  };
-
-  const forgot = async () => {
-    if (!email) {
-      toast.error("Enter your username first");
-      return;
-    }
-    const id = email.includes("@") ? email.trim() : `${email.trim()}@fleetiq.local`;
-    const { error } = await supabase.auth.resetPasswordForEmail(id, { redirectTo: window.location.origin });
-    if (error) toast.error(error.message);
-    else toast.success("Password reset link sent");
   };
 
   return (
@@ -171,12 +160,12 @@ function LoginPage() {
             <TabsContent value="login">
               <form onSubmit={signIn} className="mt-5 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Username</Label>
+                  <Label htmlFor="username">Username</Label>
                   <Input
-                    id="email"
+                    id="username"
                     autoComplete="username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     placeholder="username"
                     required
                   />
@@ -207,9 +196,6 @@ function LoginPage() {
                     <Checkbox checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
                     Remember me
                   </label>
-                  <button type="button" onClick={() => void forgot()} className="text-primary hover:underline">
-                    Forgot password?
-                  </button>
                 </div>
                 <Button type="submit" className="w-full transition-transform duration-300 hover:-translate-y-0.5" disabled={busy}>
                   {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LockKeyhole className="mr-2 h-4 w-4" />}
@@ -235,11 +221,11 @@ function LoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="remail">Username</Label>
+                  <Label htmlFor="rusername">Username</Label>
                   <Input
-                    id="remail"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="rusername"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     placeholder="username"
                     required
                   />
