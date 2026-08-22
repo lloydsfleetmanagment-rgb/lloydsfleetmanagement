@@ -103,13 +103,17 @@ function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Today's Production" value={stats.total} unit="t" icon={<Activity className="h-4 w-4" />} delay={0} />
-        <KpiCard label="Hematite (ROM)" value={stats.rom} unit="t" hint={`BHQ ${fmtNumber(stats.bhq)} t`} icon={<Layers className="h-4 w-4" />} delay={60} />
-        <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={120} />
-        <KpiCard label="Shovel Utilization" value={Math.min(100, (stats.trips / 600) * 100)} unit="%" digits={1} icon={<Gauge className="h-4 w-4" />} delay={180} />
-        <KpiCard label="Pipeline Throughput" value={stats.pipeline} unit="t" hint="ROM to TH crushers" icon={<Factory className="h-4 w-4" />} delay={240} />
+        <KpiCard label="ROM" value={stats.rom} unit="t" hint="Hematite dispatched" icon={<Layers className="h-4 w-4" />} delay={60} />
+        <KpiCard label="BHQ" value={stats.bhq} unit="t" hint="Banded hematite quartzite" icon={<Layers className="h-4 w-4" />} delay={120} />
+        <KpiCard label="SHALE" value={stats.shale} unit="t" hint="Waste / shale dispatch" icon={<Layers className="h-4 w-4" />} delay={180} />
+        <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={240} />
+        <KpiCard label="Shovel Utilization" value={Math.min(100, (stats.trips / 600) * 100)} unit="%" digits={1} icon={<Gauge className="h-4 w-4" />} delay={300} />
+        <KpiCard label="Pipeline Throughput" value={stats.pipeline} unit="t" hint="ROM to TH crushers" icon={<Factory className="h-4 w-4" />} delay={360} />
+        <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={420} />
       </div>
+
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Panel className="p-6 lg:col-span-2">
