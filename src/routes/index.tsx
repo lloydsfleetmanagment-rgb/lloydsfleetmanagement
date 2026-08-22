@@ -171,13 +171,13 @@ function LoginPage() {
             <TabsContent value="login">
               <form onSubmit={signIn} className="mt-5 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email / Username</Label>
+                  <Label htmlFor="email">Username</Label>
                   <Input
                     id="email"
                     autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@lloyds.co.in"
+                    placeholder="username"
                     required
                   />
                 </div>
@@ -235,8 +235,14 @@ function LoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="remail">Login email</Label>
-                  <Input id="remail" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Label htmlFor="remail">Username</Label>
+                  <Input
+                    id="remail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="username"
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="rpassword">Password</Label>
@@ -265,14 +271,13 @@ function LoginPage() {
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="operator">Operator</SelectItem>
                       <SelectItem value="supervisor">Supervisor</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Your access level is set by the role you select here.
+                  Operators share a single console login — new accounts are for admins and supervisors.
                 </p>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
