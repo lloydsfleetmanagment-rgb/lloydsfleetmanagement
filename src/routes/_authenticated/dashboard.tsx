@@ -226,6 +226,44 @@ function DashboardPage() {
       </div>
 
       <Panel className="mt-6 p-6">
+        <h2 className="text-lg font-semibold">Destination-wise dispatch (ROM · BHQ · Shale)</h2>
+        <p className="text-sm text-muted-foreground">
+          Every operator entry is credited to the destination selected for that material.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-widest text-muted-foreground">
+                <th className="py-2">Destination</th>
+                <th className="py-2 text-right">ROM (t)</th>
+                <th className="py-2 text-right">BHQ (t)</th>
+                <th className="py-2 text-right">Shale (t)</th>
+                <th className="py-2 text-right">Total (t)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byDestination.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-3 text-muted-foreground">
+                    No dispatch logged today.
+                  </td>
+                </tr>
+              )}
+              {byDestination.map((d) => (
+                <tr key={d.destination} className="border-t border-border font-mono tabular-nums">
+                  <td className="py-2 font-sans">{d.destination}</td>
+                  <td className="py-2 text-right text-primary">{fmtNumber(d.ROM)}</td>
+                  <td className="py-2 text-right">{fmtNumber(d.BHQ)}</td>
+                  <td className="py-2 text-right">{fmtNumber(d.SHALE)}</td>
+                  <td className="py-2 text-right">{fmtNumber(d.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
+      <Panel className="mt-6 p-6">
         <h2 className="text-lg font-semibold">Lease overview — 348 Ha</h2>
         <p className="text-sm text-muted-foreground">Stylised mine layout with live dig-face and crusher activity.</p>
         <MineMap logs={logs} />
