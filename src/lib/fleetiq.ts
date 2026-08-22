@@ -1,4 +1,4 @@
-export const SHIFTS = ["DAY", "NIGHT"] as const;
+export const SHIFTS = ["A", "B", "C"] as const;
 export type Shift = (typeof SHIFTS)[number];
 
 export const EQUIPMENT_STATUSES = ["ACTIVE", "IDLE", "BREAKDOWN", "MAINTENANCE"] as const;
@@ -22,6 +22,7 @@ export const TONNES_PER_TRIP: Record<string, number> = {
 };
 
 export const EMERGENCY_NOTIFY_EMAIL = "sweja06@gmail.com";
+export const EMERGENCY_CALL_NUMBER = "+91 93460 54190";
 
 export function tonnesFor(equipmentType: string | null | undefined, trips: number) {
   return (TONNES_PER_TRIP[equipmentType ?? ""] ?? 0) * (Number.isFinite(trips) ? trips : 0);
@@ -42,7 +43,10 @@ export function currentShift(): Shift {
   const hour = Number(
     new Date().toLocaleString("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false }),
   );
-  return hour >= 7 && hour < 19 ? "DAY" : "NIGHT";
+  // A: 06:00–14:00 · B: 14:00–22:00 · C: 22:00–06:00
+  if (hour >= 6 && hour < 14) return "A";
+  if (hour >= 14 && hour < 22) return "B";
+  return "C";
 }
 
 export function statusTone(status: string) {

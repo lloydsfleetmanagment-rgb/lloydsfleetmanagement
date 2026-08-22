@@ -1,11 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Loader2, Save, Siren } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { AlertTriangle, CheckCircle2, Languages, Loader2, PhoneCall, Save, Siren } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
-import { EMERGENCY_NOTIFY_EMAIL, currentShift, fmtNumber, todayISO, tonnesFor } from "@/lib/fleetiq";
+import { placeEmergencyCall } from "@/lib/emergency.functions";
+import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
+import {
+  EMERGENCY_CALL_NUMBER,
+  EMERGENCY_NOTIFY_EMAIL,
+  SHIFTS,
+  currentShift,
+  fmtNumber,
+  todayISO,
+  tonnesFor,
+} from "@/lib/fleetiq";
 import { KpiCard, Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/operator")({
   head: () => ({
     meta: [
       { title: "Operator Console — LLOYDS FLEETIQ" },
-      { name: "description", content: "Log trips, loading and unloading times, and raise emergency alerts from the pit." },
+      { name: "description", content: "Log trips with automatic loading and unloading times, and raise emergency alerts from the pit." },
       { property: "og:title", content: "Operator Console — LLOYDS FLEETIQ" },
       { property: "og:description", content: "Trip logging and emergency alerts for Surjagarh operators." },
     ],
@@ -37,9 +48,13 @@ export const Route = createFileRoute("/_authenticated/operator")({
   component: OperatorConsole,
 });
 
+const minutesBetween = (from: number, to: number) => Math.max(0, Math.round(((to - from) / 60000) * 10) / 10);
+
 function OperatorConsole() {
   const { profile, user } = useAuth();
+  const { t, lang, setLang } = useI18n();
   const qc = useQueryClient();
+  const callEmergency = useServerFn(placeEmergencyCall);
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -54,14 +69,35 @@ function OperatorConsole() {
   const [destination, setDestination] = useState("");
   const [trips, setTrips] = useState("");
   const [shift, setShift] = useState(currentShift());
-  const [loadingTime, setLoadingTime] = useState("");
-  const [unloadingTime, setUnloadingTime] = useState("");
   const [remarks, setRemarks] = useState("");
   const [saving, setSaving] = useState(false);
   const [invalidOpen, setInvalidOpen] = useState(false);
   const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [emergencyMsg, setEmergencyMsg] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
+
+  // Automatic timing: the loading clock starts the moment the operator begins
+  // the entry; it stops (and the unloading clock starts) when a destination is picked.
+  const startedAtRef = useRef<number | null>(null);
+  const [destPickedAt, setDestPickedAt] = useState<number | null>(null);
+  const [loadingMin, setLoadingMin] = useState(0);
+  const [tick, setTick] = useState(Date.now());
+
+  const beginEntry = () => {
+    startedAtRef.current ??= Date.now();
+  };
+
+  useEffect(() => {
+    const id = window.setInterval(() => setTick(Date.now()), 5000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const liveLoading = destPickedAt
+    ? loadingMin
+    : startedAtRef.current
+      ? minutesBetween(startedAtRef.current, tick)
+      : 0;
+  const liveUnloading = destPickedAt ? minutesBetween(destPickedAt, tick) : 0;
 
   const selectedEquipment = equipment.find((e) => e.id === equipmentId);
   const validDestinations = useMemo(
@@ -71,7 +107,10 @@ function OperatorConsole() {
 
   // Destination list depends on material — clear invalid selections immediately.
   useEffect(() => {
-    if (destination && !validDestinations.some((d) => d.code === destination)) setDestination("");
+    if (destination && !validDestinations.some((d) => d.code === destination)) {
+      setDestination("");
+      setDestPickedAt(null);
+    }
   }, [validDestinations, destination]);
 
   const destinationRow = destinations.find((d) => d.code === destination);
@@ -84,6 +123,14 @@ function OperatorConsole() {
 
   const quantity = tonnesFor(selectedEquipment?.equipment_type, Number(trips));
 
+  const pickDestination = (code: string) => {
+    beginEntry();
+    const now = Date.now();
+    setDestination(code);
+    setDestPickedAt(now);
+    setLoadingMin(startedAtRef.current ? minutesBetween(startedAtRef.current, now) : 0);
+  };
+
   // Draft auto-save so a half-finished entry survives a page reload.
   useEffect(() => {
     const raw = window.localStorage.getItem("fleetiq:draft");
@@ -93,8 +140,6 @@ function OperatorConsole() {
       setEquipmentId(d['equipmentId'] ?? "");
       setMaterial(d['material'] ?? "");
       setTrips(d['trips'] ?? "");
-      setLoadingTime(d['loadingTime'] ?? "");
-      setUnloadingTime(d['unloadingTime'] ?? "");
       setRemarks(d['remarks'] ?? "");
     } catch {
       /* ignore malformed draft */
@@ -102,26 +147,25 @@ function OperatorConsole() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      window.localStorage.setItem(
-        "fleetiq:draft",
-        JSON.stringify({ equipmentId, material, trips, loadingTime, unloadingTime, remarks }),
-      );
+    const timer = setTimeout(() => {
+      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, trips, remarks }));
     }, 600);
-    return () => clearTimeout(t);
-  }, [equipmentId, material, trips, loadingTime, unloadingTime, remarks]);
+    return () => clearTimeout(timer);
+  }, [equipmentId, material, trips, remarks]);
 
   const reset = () => {
     setTrips("");
-    setLoadingTime("");
-    setUnloadingTime("");
     setRemarks("");
+    setDestination("");
+    setDestPickedAt(null);
+    setLoadingMin(0);
+    startedAtRef.current = null;
     window.localStorage.removeItem("fleetiq:draft");
   };
 
   const save = async () => {
     if (!selectedEquipment || !material || !destination || !trips) {
-      toast.error("Complete equipment, material, destination and trips");
+      toast.error(t("op.completeFields"));
       return;
     }
     if (equipmentBlocked) {
@@ -148,8 +192,8 @@ function OperatorConsole() {
       material_code: material,
       destination_code: destination,
       trips: Number(trips),
-      loading_time_min: Number(loadingTime || 0),
-      unloading_time_min: Number(unloadingTime || 0),
+      loading_time_min: liveLoading,
+      unloading_time_min: liveUnloading,
       remarks: remarks || null,
     });
     setSaving(false);
@@ -168,7 +212,7 @@ function OperatorConsole() {
     });
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1800);
-    toast.success(`Saved · ${fmtNumber(quantity)} t added to ${selectedEquipment.code}`);
+    toast.success(`${fmtNumber(quantity)} t · ${selectedEquipment.code} → ${destination}`);
     reset();
     void qc.invalidateQueries();
   };
@@ -189,69 +233,101 @@ function OperatorConsole() {
       toast.error(error.message);
       return;
     }
+
+    // OmniDimension AI agent places the voice call to the emergency number.
+    let callStatus = "failed";
+    try {
+      const res = await callEmergency({
+        data: {
+          employeeName: profile?.employee_name ?? "Operator",
+          employeeId: profile?.employee_id ?? "unknown",
+          location: destination || "Surjagarh mine lease",
+          equipment: selectedEquipment?.code ?? "not selected",
+          shift,
+          message: emergencyMsg || "Emergency assistance required",
+        },
+      });
+      callStatus = res.status;
+    } catch {
+      callStatus = "failed";
+    }
+
     await writeAudit({
       action: "EMERGENCY_CREATED",
       entity: "emergency_alerts",
       user_id: user?.id ?? null,
       employee_id: profile?.employee_id ?? null,
       employee_name: profile?.employee_name ?? null,
-      details: { notify_email: EMERGENCY_NOTIFY_EMAIL, equipment: selectedEquipment?.code ?? null, shift },
+      details: {
+        notify_email: EMERGENCY_NOTIFY_EMAIL,
+        call_number: EMERGENCY_CALL_NUMBER,
+        call_status: callStatus,
+        equipment: selectedEquipment?.code ?? null,
+        shift,
+      },
     });
     setEmergencyOpen(false);
     setEmergencyMsg("");
-    toast.success("Emergency alert sent to Admin control room");
+    if (callStatus === "calling") toast.success(`${t("op.emergencySent")} · ${EMERGENCY_CALL_NUMBER}`);
+    else toast.warning(`${t("op.emergencySent")} · voice call pending`);
   };
 
   const todayTotals = useMemo(() => {
-    const t = myLogs.reduce((s, l) => s + Number(l.quantity_t), 0);
-    const trips = myLogs.reduce((s, l) => s + l.trips, 0);
-    return { t, trips };
+    const tonnes = myLogs.reduce((s, l) => s + Number(l.quantity_t), 0);
+    const tripCount = myLogs.reduce((s, l) => s + l.trips, 0);
+    return { t: tonnes, trips: tripCount };
   }, [myLogs]);
 
   return (
     <div className="mx-auto max-w-[1300px]">
       <SectionHeader
-        title="Operator Console"
-        subtitle={`${profile?.employee_name ?? "Operator"} · Employee ID ${profile?.employee_id ?? "—"} · ${shift} shift`}
+        title={t("op.title")}
+        subtitle={`${profile?.employee_name ?? "Operator"} · ${t("op.subtitle")} ${shift}`}
         actions={
-          <Button
-            variant="destructive"
-            className="animate-alarm rounded-full"
-            onClick={() => setEmergencyOpen(true)}
-          >
-            <Siren className="mr-2 h-4 w-4" /> EMERGENCY
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
+              <SelectTrigger className="w-[150px]">
+                <Languages className="mr-2 h-4 w-4 text-primary" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((l) => (
+                  <SelectItem key={l.code} value={l.code}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="destructive" className="animate-alarm rounded-full" onClick={() => setEmergencyOpen(true)}>
+              <Siren className="mr-2 h-4 w-4" /> {t("op.emergency")}
+            </Button>
+          </div>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard label="My tonnage today" value={todayTotals.t} unit="t" />
-        <KpiCard label="My trips today" value={todayTotals.trips} delay={60} />
-        <KpiCard label="Entries logged" value={myLogs.length} delay={120} />
+        <KpiCard label={t("op.myTonnage")} value={todayTotals.t} unit="t" />
+        <KpiCard label={t("op.myTrips")} value={todayTotals.trips} delay={60} />
+        <KpiCard label={t("op.entries")} value={myLogs.length} delay={120} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-5">
         <Panel className="p-6 lg:col-span-3">
-          <h2 className="text-lg font-semibold">Trip entry</h2>
-          <p className="text-sm text-muted-foreground">
-            Employee ID is identified automatically from your login. Quantity is calculated for you.
-          </p>
+          <h2 className="text-lg font-semibold">{t("op.tripEntry")}</h2>
+          <p className="text-sm text-muted-foreground">{t("op.tripHelp")}</p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Employee ID</Label>
-              <Input value={profile?.employee_id ?? ""} readOnly className="font-mono" />
-            </div>
-            <div className="space-y-2">
-              <Label>Employee name</Label>
-              <Input value={profile?.employee_name ?? ""} readOnly />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Equipment</Label>
-              <Select value={equipmentId} onValueChange={setEquipmentId}>
+              <Label>{t("op.equipment")}</Label>
+              <Select
+                value={equipmentId}
+                onValueChange={(v) => {
+                  beginEntry();
+                  setEquipmentId(v);
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select dumper / Sany" />
+                  <SelectValue placeholder={t("op.selectEquipment")} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
                   {equipment.map((e) => (
@@ -264,23 +340,32 @@ function OperatorConsole() {
             </div>
 
             <div className="space-y-2">
-              <Label>Shift</Label>
+              <Label>{t("op.shift")}</Label>
               <Select value={shift} onValueChange={(v) => setShift(v as typeof shift)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="DAY">DAY</SelectItem>
-                  <SelectItem value="NIGHT">NIGHT</SelectItem>
+                  {SHIFTS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Material</Label>
-              <Select value={material} onValueChange={setMaterial}>
+              <Label>{t("op.material")}</Label>
+              <Select
+                value={material}
+                onValueChange={(v) => {
+                  beginEntry();
+                  setMaterial(v);
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select material" />
+                  <SelectValue placeholder={t("op.selectMaterial")} />
                 </SelectTrigger>
                 <SelectContent>
                   {materials.map((m) => (
@@ -293,10 +378,10 @@ function OperatorConsole() {
             </div>
 
             <div className="space-y-2">
-              <Label>Destination</Label>
-              <Select value={destination} onValueChange={setDestination} disabled={!material}>
+              <Label>{t("op.destination")}</Label>
+              <Select value={destination} onValueChange={pickDestination} disabled={!material}>
                 <SelectTrigger>
-                  <SelectValue placeholder={material ? "Select destination" : "Select material first"} />
+                  <SelectValue placeholder={material ? t("op.selectDestination") : t("op.selectMaterialFirst")} />
                 </SelectTrigger>
                 <SelectContent>
                   {validDestinations.map((d) => (
@@ -310,62 +395,86 @@ function OperatorConsole() {
             </div>
 
             <div className="space-y-2">
-              <Label>Actual trips</Label>
-              <Input type="number" min={1} value={trips} onChange={(e) => setTrips(e.target.value)} placeholder="0" />
+              <Label>{t("op.trips")}</Label>
+              <Input
+                type="number"
+                min={1}
+                value={trips}
+                onChange={(e) => {
+                  beginEntry();
+                  setTrips(e.target.value);
+                }}
+                placeholder="0"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>Automatic quantity</Label>
+              <Label>{t("op.quantity")}</Label>
               <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums text-primary">
                 {fmtNumber(quantity)} t
-                <span className="ml-2 text-[11px] font-sans text-muted-foreground">
-                  {selectedEquipment ? `${selectedEquipment.equipment_type === "DUMPER" ? 100 : 70} t / trip` : "select equipment"}
+                <span className="ml-2 font-sans text-[11px] text-muted-foreground">
+                  {selectedEquipment
+                    ? `${selectedEquipment.equipment_type === "DUMPER" ? 100 : 70} ${t("op.perTrip")}`
+                    : t("op.selectEquipmentShort")}
                 </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Loading time (min)</Label>
-              <Input type="number" min={0} value={loadingTime} onChange={(e) => setLoadingTime(e.target.value)} />
+              <Label>{t("op.loading")}</Label>
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
+                {fmtNumber(liveLoading, 1)} {t("op.min")}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Unloading time (min)</Label>
-              <Input type="number" min={0} value={unloadingTime} onChange={(e) => setUnloadingTime(e.target.value)} />
+              <Label>{t("op.unloading")}</Label>
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
+                {fmtNumber(liveUnloading, 1)} {t("op.min")}
+              </div>
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label>Remarks</Label>
-              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={2} />
+              <Label>{t("op.remarks")}</Label>
+              <Textarea
+                value={remarks}
+                onChange={(e) => {
+                  beginEntry();
+                  setRemarks(e.target.value);
+                }}
+                rows={2}
+              />
             </div>
           </div>
 
+          <p className="mt-3 text-xs text-muted-foreground">{t("op.timerHint")}</p>
+
           {equipmentBlocked && (
             <p className="mt-4 flex items-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4" /> {destination} allows SANY equipment only.
+              <AlertTriangle className="h-4 w-4" /> {destination} — {t("op.invalidTitle")}
             </p>
           )}
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button onClick={() => void save()} disabled={saving || equipmentBlocked}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Save entry
+              {t("op.save")}
             </Button>
             <Button variant="secondary" onClick={reset}>
-              Clear
+              {t("op.clear")}
             </Button>
-            <span className="text-xs text-muted-foreground">Draft auto-saves as you type</span>
+            <span className="text-xs text-muted-foreground">{t("op.draft")}</span>
             {savedFlash && (
               <span className="animate-fade-up ml-auto inline-flex items-center gap-1.5 text-sm text-primary">
-                <CheckCircle2 className="h-4 w-4" /> Saved to fleet, production &amp; summary
+                <CheckCircle2 className="h-4 w-4" /> {t("op.saved")}
               </span>
             )}
           </div>
         </Panel>
 
         <Panel className="p-6 lg:col-span-2">
-          <h2 className="text-lg font-semibold">My entries today</h2>
+          <h2 className="text-lg font-semibold">{t("op.myEntries")}</h2>
           <div className="mt-4 space-y-2">
-            {myLogs.length === 0 && <p className="text-sm text-muted-foreground">No entries logged yet for today.</p>}
+            {myLogs.length === 0 && <p className="text-sm text-muted-foreground">{t("op.noEntries")}</p>}
             {myLogs.map((l) => (
               <div key={l.id} className="animate-fade-up rounded-xl border border-border bg-secondary/40 p-3">
                 <div className="flex items-center justify-between text-sm">
@@ -373,7 +482,7 @@ function OperatorConsole() {
                   <span className="font-mono tabular-nums text-primary">{fmtNumber(Number(l.quantity_t))} t</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {l.material_code} → {l.destination_code} · {l.trips} trips · L {l.loading_time_min}m / U {l.unloading_time_min}m
+                  {l.material_code} → {l.destination_code} · {l.trips} · L {l.loading_time_min}m / U {l.unloading_time_min}m
                 </p>
               </div>
             ))}
@@ -385,15 +494,13 @@ function OperatorConsole() {
         <AlertDialogContent className="border-destructive/50">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" /> INVALID EQUIPMENT
+              <AlertTriangle className="h-5 w-5" /> {t("op.invalidTitle")}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              TH-2 and TH-3 allow SANY equipment only. Please select SANY equipment or change the destination.
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t("op.invalidBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDestination("")}>Change destination</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setEquipmentId("")}>Change equipment</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setDestination("")}>{t("op.changeDestination")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setEquipmentId("")}>{t("op.changeEquipment")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -402,24 +509,25 @@ function OperatorConsole() {
         <DialogContent className="border-destructive/50">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
-              <Siren className="h-5 w-5" /> Confirm emergency alert
+              <Siren className="h-5 w-5" /> {t("op.confirmEmergency")}
             </DialogTitle>
-            <DialogDescription>
-              This sends an immediate alert to the Admin dashboard with your Employee ID, equipment and location details.
-            </DialogDescription>
+            <DialogDescription>{t("op.emergencyBody")}</DialogDescription>
           </DialogHeader>
+          <p className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2.5 font-mono text-xs">
+            <PhoneCall className="h-3.5 w-3.5 text-primary" /> {EMERGENCY_CALL_NUMBER}
+          </p>
           <Textarea
             value={emergencyMsg}
             onChange={(e) => setEmergencyMsg(e.target.value)}
-            placeholder="What is happening? (optional)"
+            placeholder={t("op.emergencyPlaceholder")}
             rows={3}
           />
           <DialogFooter>
             <Button variant="secondary" onClick={() => setEmergencyOpen(false)}>
-              Cancel
+              {t("op.cancel")}
             </Button>
             <Button variant="destructive" onClick={() => void raiseEmergency()}>
-              Send emergency alert
+              {t("op.sendEmergency")}
             </Button>
           </DialogFooter>
         </DialogContent>

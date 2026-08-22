@@ -33,7 +33,7 @@ function DashboardPage() {
   const { data: logs = [], isLoading } = useTodayLogs();
   const { data: equipment = [] } = useEquipment();
   const { data: crushers = [] } = useCrushers();
-  const [shiftFilter, setShiftFilter] = useState<"ALL" | "DAY" | "NIGHT">("ALL");
+  const [shiftFilter, setShiftFilter] = useState<"ALL" | "A" | "B" | "C">("ALL");
 
   const stats = useMemo(() => {
     const total = logs.reduce((s, l) => s + Number(l.quantity_t), 0);
@@ -63,7 +63,7 @@ function DashboardPage() {
   }, [logs, shiftFilter]);
 
   const shiftwise = useMemo(() => {
-    return (["DAY", "NIGHT"] as const).map((shift) => {
+    return (["A", "B", "C"] as const).map((shift) => {
       const rows = logs.filter((l) => l.shift === shift);
       return {
         shift,
@@ -82,6 +82,21 @@ function DashboardPage() {
       received: logs.filter((l) => l.destination_code === c.code).reduce((s, l) => s + Number(l.quantity_t), 0),
     }));
   }, [crushers, logs]);
+
+  // Every ROM / BHQ / SHALE trip lands against the destination the operator chose.
+  const byDestination = useMemo(() => {
+    const map = new Map<string, { destination: string; ROM: number; BHQ: number; SHALE: number; total: number }>();
+    logs.forEach((l) => {
+      const row =
+        map.get(l.destination_code) ?? { destination: l.destination_code, ROM: 0, BHQ: 0, SHALE: 0, total: 0 };
+      const key = l.material_code as "ROM" | "BHQ" | "SHALE";
+      const qty = Number(l.quantity_t);
+      if (key in row) row[key] += qty;
+      row.total += qty;
+      map.set(l.destination_code, row);
+    });
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  }, [logs]);
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -103,13 +118,17 @@ function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Today's Production" value={stats.total} unit="t" icon={<Activity className="h-4 w-4" />} delay={0} />
-        <KpiCard label="Hematite (ROM)" value={stats.rom} unit="t" hint={`BHQ ${fmtNumber(stats.bhq)} t`} icon={<Layers className="h-4 w-4" />} delay={60} />
-        <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={120} />
-        <KpiCard label="Shovel Utilization" value={Math.min(100, (stats.trips / 600) * 100)} unit="%" digits={1} icon={<Gauge className="h-4 w-4" />} delay={180} />
-        <KpiCard label="Pipeline Throughput" value={stats.pipeline} unit="t" hint="ROM to TH crushers" icon={<Factory className="h-4 w-4" />} delay={240} />
+        <KpiCard label="ROM" value={stats.rom} unit="t" hint="Hematite dispatched" icon={<Layers className="h-4 w-4" />} delay={60} />
+        <KpiCard label="BHQ" value={stats.bhq} unit="t" hint="Banded hematite quartzite" icon={<Layers className="h-4 w-4" />} delay={120} />
+        <KpiCard label="SHALE" value={stats.shale} unit="t" hint="Waste / shale dispatch" icon={<Layers className="h-4 w-4" />} delay={180} />
+        <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={240} />
+        <KpiCard label="Shovel Utilization" value={Math.min(100, (stats.trips / 600) * 100)} unit="%" digits={1} icon={<Gauge className="h-4 w-4" />} delay={300} />
+        <KpiCard label="Pipeline Throughput" value={stats.pipeline} unit="t" hint="ROM to TH crushers" icon={<Factory className="h-4 w-4" />} delay={360} />
+        <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={420} />
       </div>
+
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Panel className="p-6 lg:col-span-2">
@@ -121,8 +140,9 @@ function DashboardPage() {
             <Tabs value={shiftFilter} onValueChange={(v) => setShiftFilter(v as typeof shiftFilter)}>
               <TabsList className="bg-secondary/60">
                 <TabsTrigger value="ALL">All</TabsTrigger>
-                <TabsTrigger value="DAY">Day</TabsTrigger>
-                <TabsTrigger value="NIGHT">Night</TabsTrigger>
+                <TabsTrigger value="A">A</TabsTrigger>
+                <TabsTrigger value="B">B</TabsTrigger>
+                <TabsTrigger value="C">C</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -204,6 +224,44 @@ function DashboardPage() {
           </Panel>
         </div>
       </div>
+
+      <Panel className="mt-6 p-6">
+        <h2 className="text-lg font-semibold">Destination-wise dispatch (ROM · BHQ · Shale)</h2>
+        <p className="text-sm text-muted-foreground">
+          Every operator entry is credited to the destination selected for that material.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-widest text-muted-foreground">
+                <th className="py-2">Destination</th>
+                <th className="py-2 text-right">ROM (t)</th>
+                <th className="py-2 text-right">BHQ (t)</th>
+                <th className="py-2 text-right">Shale (t)</th>
+                <th className="py-2 text-right">Total (t)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byDestination.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-3 text-muted-foreground">
+                    No dispatch logged today.
+                  </td>
+                </tr>
+              )}
+              {byDestination.map((d) => (
+                <tr key={d.destination} className="border-t border-border font-mono tabular-nums">
+                  <td className="py-2 font-sans">{d.destination}</td>
+                  <td className="py-2 text-right text-primary">{fmtNumber(d.ROM)}</td>
+                  <td className="py-2 text-right">{fmtNumber(d.BHQ)}</td>
+                  <td className="py-2 text-right">{fmtNumber(d.SHALE)}</td>
+                  <td className="py-2 text-right">{fmtNumber(d.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
       <Panel className="mt-6 p-6">
         <h2 className="text-lg font-semibold">Lease overview — 348 Ha</h2>

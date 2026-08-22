@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
 import { LloydsMark, ThriveniMark, WordMark } from "./Brand";
 import { Particles } from "./Particles";
 import { EmergencyWatcher } from "./EmergencyWatcher";
@@ -29,14 +30,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "supervisor", "operator"] },
-  { to: "/operator", label: "Operator Console", icon: ClipboardList, roles: ["admin", "supervisor", "operator"] },
-  { to: "/fleet", label: "Fleet", icon: Truck, roles: ["admin", "supervisor", "operator"] },
-  { to: "/production", label: "Production", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
-  { to: "/dig-faces", label: "Dig Faces", icon: Mountain, roles: ["admin", "supervisor", "operator"] },
-  { to: "/crushers", label: "Crushers & Pipeline", icon: Factory, roles: ["admin", "supervisor", "operator"] },
-  { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
-  { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "supervisor", "operator"] },
+  { to: "/dashboard", key: "nav.dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "supervisor", "operator"] },
+  { to: "/operator", key: "nav.operator", label: "Operator Console", icon: ClipboardList, roles: ["admin", "supervisor", "operator"] },
+  { to: "/fleet", key: "nav.fleet", label: "Fleet", icon: Truck, roles: ["admin", "supervisor", "operator"] },
+  { to: "/production", key: "nav.production", label: "Production", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
+  { to: "/dig-faces", key: "nav.digfaces", label: "Dig Faces", icon: Mountain, roles: ["admin", "supervisor", "operator"] },
+  { to: "/crushers", key: "nav.crushers", label: "Crushers & Pipeline", icon: Factory, roles: ["admin", "supervisor", "operator"] },
+  { to: "/reports", key: "nav.reports", label: "Reports", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
+  { to: "/settings", key: "nav.settings", label: "Settings", icon: Settings, roles: ["admin", "supervisor", "operator"] },
 ] as const;
 
 function LiveClock() {
@@ -59,10 +60,13 @@ function LiveClock() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { role, profile, signOut, isAdmin } = useAuth();
+  const { role, profile, signOut, isAdmin, isOperator } = useAuth();
+  const { t } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const items = NAV.filter((n) => (role ? (n.roles as readonly string[]).includes(role) : false));
+  // Only operators see the console in their chosen language.
+  const label = (item: (typeof NAV)[number]) => (isOperator ? t(item.key) : item.label);
 
   return (
     <div className="relative min-h-screen">
@@ -95,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   )}
                 >
                   <Icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {!collapsed && <span className="truncate">{label(item)}</span>}
                 </Link>
               );
             })}
@@ -165,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   pathname.startsWith(item.to) ? "bg-secondary text-foreground" : "text-muted-foreground",
                 )}
               >
-                {item.label}
+                {label(item)}
               </Link>
             ))}
           </nav>
