@@ -304,6 +304,7 @@ export type Database = {
           equipment_code: string
           equipment_id: string
           equipment_type: string
+          excavator: string | null
           id: string
           loading_time_min: number
           log_date: string
@@ -326,6 +327,7 @@ export type Database = {
           equipment_code: string
           equipment_id: string
           equipment_type: string
+          excavator?: string | null
           id?: string
           loading_time_min?: number
           log_date?: string
@@ -348,6 +350,7 @@ export type Database = {
           equipment_code?: string
           equipment_id?: string
           equipment_type?: string
+          excavator?: string | null
           id?: string
           loading_time_min?: number
           log_date?: string
