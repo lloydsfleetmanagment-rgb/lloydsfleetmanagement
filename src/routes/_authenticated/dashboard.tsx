@@ -33,7 +33,7 @@ function DashboardPage() {
   const { data: logs = [], isLoading } = useTodayLogs();
   const { data: equipment = [] } = useEquipment();
   const { data: crushers = [] } = useCrushers();
-  const [shiftFilter, setShiftFilter] = useState<"ALL" | "DAY" | "NIGHT">("ALL");
+  const [shiftFilter, setShiftFilter] = useState<"ALL" | "A" | "B" | "C">("ALL");
 
   const stats = useMemo(() => {
     const total = logs.reduce((s, l) => s + Number(l.quantity_t), 0);
@@ -63,7 +63,7 @@ function DashboardPage() {
   }, [logs, shiftFilter]);
 
   const shiftwise = useMemo(() => {
-    return (["DAY", "NIGHT"] as const).map((shift) => {
+    return (["A", "B", "C"] as const).map((shift) => {
       const rows = logs.filter((l) => l.shift === shift);
       return {
         shift,
@@ -121,8 +121,9 @@ function DashboardPage() {
             <Tabs value={shiftFilter} onValueChange={(v) => setShiftFilter(v as typeof shiftFilter)}>
               <TabsList className="bg-secondary/60">
                 <TabsTrigger value="ALL">All</TabsTrigger>
-                <TabsTrigger value="DAY">Day</TabsTrigger>
-                <TabsTrigger value="NIGHT">Night</TabsTrigger>
+                <TabsTrigger value="A">A</TabsTrigger>
+                <TabsTrigger value="B">B</TabsTrigger>
+                <TabsTrigger value="C">C</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
