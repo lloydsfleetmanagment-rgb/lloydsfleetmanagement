@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Languages, Loader2, Save, Siren } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Languages, Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
-import { placeEmergencyCall } from "@/lib/emergency.functions";
-import { sendEmergencyEmail } from "@/lib/emergency-email.functions";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
-  EMERGENCY_CALL_NUMBER,
   EXCAVATOR_GROUPS,
-  EMERGENCY_NOTIFY_EMAIL,
   SHIFTS,
   currentShift,
   fmtNumber,
