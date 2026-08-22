@@ -42,7 +42,10 @@ export function currentShift(): Shift {
   const hour = Number(
     new Date().toLocaleString("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false }),
   );
-  return hour >= 7 && hour < 19 ? "DAY" : "NIGHT";
+  // A: 06:00–14:00 · B: 14:00–22:00 · C: 22:00–06:00
+  if (hour >= 6 && hour < 14) return "A";
+  if (hour >= 14 && hour < 22) return "B";
+  return "C";
 }
 
 export function statusTone(status: string) {
