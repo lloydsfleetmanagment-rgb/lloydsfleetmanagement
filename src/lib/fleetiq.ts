@@ -3,6 +3,18 @@ export type Shift = (typeof SHIFTS)[number];
 
 export const EQUIPMENT_STATUSES = ["ACTIVE", "IDLE", "BREAKDOWN", "MAINTENANCE"] as const;
 
+export const CRUSHER_STATUSES = ["RUNNING", "IDLE", "STOPPED", "MAINTENANCE"] as const;
+
+export const DIG_FACE_STATUSES = ["ACTIVE", "IDLE", "CLOSED"] as const;
+
+export function fmtTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /** Fixed payloads — trips are converted to tonnes with these factors. */
 export const TONNES_PER_TRIP: Record<string, number> = {
   DUMPER: 100,
