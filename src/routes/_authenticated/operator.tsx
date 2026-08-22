@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Languages, Loader2, PhoneCall, Save, Siren } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Languages, Loader2, Save, Siren } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
@@ -43,7 +43,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/operator")({
@@ -84,8 +83,7 @@ function OperatorConsole() {
   const [remarks, setRemarks] = useState("");
   const [saving, setSaving] = useState(false);
   const [invalidOpen, setInvalidOpen] = useState(false);
-  const [emergencyOpen, setEmergencyOpen] = useState(false);
-  const [emergencyMsg, setEmergencyMsg] = useState("");
+  const [sendingEmergency, setSendingEmergency] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
 
   // Automatic timing: the loading clock starts the moment the operator begins
@@ -233,7 +231,10 @@ function OperatorConsole() {
   };
 
   const raiseEmergency = async () => {
-    const msg = emergencyMsg || "Emergency assistance required";
+    if (sendingEmergency) return;
+    setSendingEmergency(true);
+    const msg = "Emergency assistance required";
+    toast.warning(t("op.emergency"));
     const { data: inserted, error } = await supabase
       .from("emergency_alerts")
       .insert({
@@ -251,6 +252,7 @@ function OperatorConsole() {
       .single();
     if (error) {
       toast.error(error.message);
+      setSendingEmergency(false);
       return;
     }
 
@@ -312,8 +314,7 @@ function OperatorConsole() {
         shift,
       },
     });
-    setEmergencyOpen(false);
-    setEmergencyMsg("");
+    setSendingEmergency(false);
     if (emailStatus === "sent") toast.success(`${t("op.emergencySent")} · ${EMERGENCY_NOTIFY_EMAIL}`);
     else toast.warning(`${t("op.emergencySent")} · email pending`);
   };
@@ -345,7 +346,12 @@ function OperatorConsole() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="destructive" className="animate-alarm rounded-full" onClick={() => setEmergencyOpen(true)}>
+            <Button
+              variant="destructive"
+              className="animate-alarm rounded-full"
+              disabled={sendingEmergency}
+              onClick={() => void raiseEmergency()}
+            >
               <Siren className="mr-2 h-4 w-4" /> {t("op.emergency")}
             </Button>
           </div>
@@ -582,33 +588,6 @@ function OperatorConsole() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={emergencyOpen} onOpenChange={setEmergencyOpen}>
-        <DialogContent className="border-destructive/50">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <Siren className="h-5 w-5" /> {t("op.confirmEmergency")}
-            </DialogTitle>
-            <DialogDescription>{t("op.emergencyBody")}</DialogDescription>
-          </DialogHeader>
-          <p className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2.5 font-mono text-xs">
-            <PhoneCall className="h-3.5 w-3.5 text-primary" /> {EMERGENCY_CALL_NUMBER}
-          </p>
-          <Textarea
-            value={emergencyMsg}
-            onChange={(e) => setEmergencyMsg(e.target.value)}
-            placeholder={t("op.emergencyPlaceholder")}
-            rows={3}
-          />
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setEmergencyOpen(false)}>
-              {t("op.cancel")}
-            </Button>
-            <Button variant="destructive" onClick={() => void raiseEmergency()}>
-              {t("op.sendEmergency")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
