@@ -124,9 +124,8 @@ function DashboardPage() {
         <KpiCard label="BHQ" value={stats.bhq} unit="t" hint="Banded hematite quartzite" icon={<Layers className="h-4 w-4" />} delay={120} />
         <KpiCard label="SHALE" value={stats.shale} unit="t" hint="Waste / shale dispatch" icon={<Layers className="h-4 w-4" />} delay={180} />
         <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={240} />
-        <KpiCard label="Shovel Utilization" value={Math.min(100, (stats.trips / 600) * 100)} unit="%" digits={1} icon={<Gauge className="h-4 w-4" />} delay={300} />
-        <KpiCard label="Pipeline Throughput" value={stats.pipeline} unit="t" hint="ROM to TH crushers" icon={<Factory className="h-4 w-4" />} delay={360} />
-        <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={420} />
+        <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={300} />
+
       </div>
 
 
