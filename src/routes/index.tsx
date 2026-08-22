@@ -78,7 +78,7 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [empId, setEmpId] = useState("");
-  const [role, setRole] = useState("operator");
+  const [role, setRole] = useState("supervisor");
 
   useEffect(() => {
     const t = setTimeout(() => setIntroDone(true), 2400);
