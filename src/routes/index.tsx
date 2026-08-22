@@ -133,7 +133,7 @@ function LoginPage() {
 
   const forgot = async () => {
     if (!email) {
-      toast.error("Enter your email first");
+      toast.error("Enter your username first");
       return;
     }
     const id = email.includes("@") ? email.trim() : `${email.trim()}@fleetiq.local`;
