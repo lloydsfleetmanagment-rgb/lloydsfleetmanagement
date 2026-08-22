@@ -22,6 +22,7 @@ export const TONNES_PER_TRIP: Record<string, number> = {
 };
 
 export const EMERGENCY_NOTIFY_EMAIL = "sweja06@gmail.com";
+export const EMERGENCY_CALL_NUMBER = "+91 93460 54190";
 
 export function tonnesFor(equipmentType: string | null | undefined, trips: number) {
   return (TONNES_PER_TRIP[equipmentType ?? ""] ?? 0) * (Number.isFinite(trips) ? trips : 0);
