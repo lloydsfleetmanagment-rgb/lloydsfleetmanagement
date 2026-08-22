@@ -29,14 +29,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "supervisor", "operator"] },
-  { to: "/operator", label: "Operator Console", icon: ClipboardList, roles: ["admin", "supervisor", "operator"] },
-  { to: "/fleet", label: "Fleet", icon: Truck, roles: ["admin", "supervisor", "operator"] },
-  { to: "/production", label: "Production", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
-  { to: "/dig-faces", label: "Dig Faces", icon: Mountain, roles: ["admin", "supervisor", "operator"] },
-  { to: "/crushers", label: "Crushers & Pipeline", icon: Factory, roles: ["admin", "supervisor", "operator"] },
-  { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
-  { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "supervisor", "operator"] },
+  { to: "/dashboard", key: "nav.dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "supervisor", "operator"] },
+  { to: "/operator", key: "nav.operator", label: "Operator Console", icon: ClipboardList, roles: ["admin", "supervisor", "operator"] },
+  { to: "/fleet", key: "nav.fleet", label: "Fleet", icon: Truck, roles: ["admin", "supervisor", "operator"] },
+  { to: "/production", key: "nav.production", label: "Production", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
+  { to: "/dig-faces", key: "nav.digfaces", label: "Dig Faces", icon: Mountain, roles: ["admin", "supervisor", "operator"] },
+  { to: "/crushers", key: "nav.crushers", label: "Crushers & Pipeline", icon: Factory, roles: ["admin", "supervisor", "operator"] },
+  { to: "/reports", key: "nav.reports", label: "Reports", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
+  { to: "/settings", key: "nav.settings", label: "Settings", icon: Settings, roles: ["admin", "supervisor", "operator"] },
 ] as const;
 
 function LiveClock() {
