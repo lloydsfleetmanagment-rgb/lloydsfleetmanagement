@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/production")({
 
 function ProductionPage() {
   const [date, setDate] = useState(todayISO());
-  const [shift, setShift] = useState<"ALL" | "DAY" | "NIGHT">("ALL");
+  const [shift, setShift] = useState<"ALL" | "A" | "B" | "C">("ALL");
   const { data: logs = [], isLoading } = useOperatorLogs({ date, limit: 2000 });
 
   const rows = useMemo(() => logs.filter((l) => shift === "ALL" || l.shift === shift), [logs, shift]);
@@ -64,8 +64,9 @@ function ProductionPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="DAY">Day</SelectItem>
-                  <SelectItem value="NIGHT">Night</SelectItem>
+                  <SelectItem value="A">Shift A</SelectItem>
+                  <SelectItem value="B">Shift B</SelectItem>
+                  <SelectItem value="C">Shift C</SelectItem>
                 </SelectContent>
               </Select>
             </div>
