@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
 import { LloydsMark, ThriveniMark, WordMark } from "./Brand";
 import { Particles } from "./Particles";
 import { EmergencyWatcher } from "./EmergencyWatcher";
