@@ -43,7 +43,11 @@ function OperatorConsole() {
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
-  const { data: myLogs = [] } = useOperatorLogs({ date: todayISO(), userId: user?.id, limit: 100 });
+  const { data: myLogs = [] } = useOperatorLogs({
+    date: todayISO(),
+    limit: 100,
+    ...(user?.id ? { userId: user.id } : {}),
+  });
 
   const [equipmentId, setEquipmentId] = useState("");
   const [material, setMaterial] = useState("");
