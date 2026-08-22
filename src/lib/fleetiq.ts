@@ -1,4 +1,4 @@
-export const SHIFTS = ["DAY", "NIGHT"] as const;
+export const SHIFTS = ["A", "B", "C"] as const;
 export type Shift = (typeof SHIFTS)[number];
 
 export const EQUIPMENT_STATUSES = ["ACTIVE", "IDLE", "BREAKDOWN", "MAINTENANCE"] as const;
