@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, Languages, Loader2, PhoneCall, Save, Siren } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Languages, Loader2, Save, Siren } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
@@ -43,7 +43,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/operator")({
