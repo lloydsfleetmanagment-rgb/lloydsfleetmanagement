@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { fmtNumber } from "@/lib/fleetiq";
 
@@ -6,13 +6,17 @@ export function Panel({
   children,
   className,
   tilt = false,
+  style,
 }: {
   children: ReactNode;
   className?: string;
   tilt?: boolean;
+  style?: CSSProperties;
 }) {
   return (
-    <div className={cn("surface-1 rounded-2xl", tilt && "tilt-card", className)}>{children}</div>
+    <div className={cn("surface-1 rounded-2xl", tilt && "tilt-card", className)} style={style}>
+      {children}
+    </div>
   );
 }
 
