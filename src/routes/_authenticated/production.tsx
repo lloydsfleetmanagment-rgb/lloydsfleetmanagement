@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { KpiCard, LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { useOperatorLogs } from "@/lib/queries";
-import { downloadCsv, fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
+import { fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
+import { downloadMaterialWorkbook } from "@/lib/excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,24 +75,32 @@ function ProductionPage() {
               variant="secondary"
               className="self-end"
               onClick={() =>
-                downloadCsv(
-                  `fleetiq-production-${date}.csv`,
-                  rows.map((r) => ({
-                    Time: fmtTime(r.logged_at),
-                    Shift: r.shift,
-                    Employee: r.employee_name ?? "",
-                    EmployeeID: r.employee_id ?? "",
-                    Equipment: r.equipment_code,
-                    Material: r.material_code,
-                    Destination: r.destination_code,
-                    Trips: r.trips,
-                    Tonnes: r.quantity_t,
-                  })),
+                downloadMaterialWorkbook(
+                  `fleetiq-production-${date}${shift === "ALL" ? "" : `-shift-${shift}`}.xlsx`,
+                  rows.map((r) => {
+                    const x = r as typeof r & { excavator?: string | null };
+                    return {
+                      Date: date,
+                      Time: fmtTime(r.logged_at),
+                      Shift: r.shift,
+                      Employee: r.employee_name ?? "",
+                      EmployeeID: r.employee_id ?? "",
+                      Equipment: r.equipment_code,
+                      Excavator: x.excavator ?? "",
+                      Material: r.material_code,
+                      Destination: r.destination_code,
+                      "Loading time (min)": r.loading_time_min ?? 0,
+                      "Unloading time (min)": r.unloading_time_min ?? 0,
+                      Trips: r.trips,
+                      Tonnes: Number(r.quantity_t),
+                    };
+                  }),
                 )
               }
             >
-              Export CSV
+              Export Excel
             </Button>
+
           </>
         }
       />
