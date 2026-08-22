@@ -83,6 +83,21 @@ function DashboardPage() {
     }));
   }, [crushers, logs]);
 
+  // Every ROM / BHQ / SHALE trip lands against the destination the operator chose.
+  const byDestination = useMemo(() => {
+    const map = new Map<string, { destination: string; ROM: number; BHQ: number; SHALE: number; total: number }>();
+    logs.forEach((l) => {
+      const row =
+        map.get(l.destination_code) ?? { destination: l.destination_code, ROM: 0, BHQ: 0, SHALE: 0, total: 0 };
+      const key = l.material_code as "ROM" | "BHQ" | "SHALE";
+      const qty = Number(l.quantity_t);
+      if (key in row) row[key] += qty;
+      row.total += qty;
+      map.set(l.destination_code, row);
+    });
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  }, [logs]);
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
