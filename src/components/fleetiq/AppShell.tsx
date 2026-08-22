@@ -139,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <DropdownMenuLabel>
                     <p className="text-sm">{profile?.employee_name}</p>
                     <p className="font-mono text-xs text-muted-foreground">Emp ID: {profile?.employee_id ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{profile?.email}</p>
+                    <p className="text-xs text-muted-foreground">{profile?.employee_id}</p>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

@@ -5,7 +5,6 @@ import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeam, writeAudit } from "@/lib/queries";
-import { EMERGENCY_NOTIFY_EMAIL } from "@/lib/fleetiq";
 import { Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +77,7 @@ function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-[1100px]">
-      <SectionHeader title="Settings" subtitle={`Signed in as ${profile?.email ?? user?.email ?? ""} · role ${role ?? "—"}`} />
+      <SectionHeader title="Settings" subtitle={`Signed in as ${profile?.employee_name ?? profile?.employee_id ?? "user"} · role ${role ?? "—"}`} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel className="p-6">
@@ -92,10 +91,6 @@ function SettingsPage() {
               <Label>Employee ID</Label>
               <Input value={empId} onChange={(e) => setEmpId(e.target.value)} className="font-mono" />
             </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={profile?.email ?? user?.email ?? ""} readOnly />
-            </div>
             <Button onClick={() => void saveProfile()} disabled={saving}>
               Save profile
             </Button>
@@ -105,8 +100,7 @@ function SettingsPage() {
         <Panel className="p-6">
           <h2 className="text-lg font-semibold">Emergency routing</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Every emergency alert appears instantly on the Admin dashboard with an audible alarm, and is recorded against{" "}
-            <span className="text-foreground">{EMERGENCY_NOTIFY_EMAIL}</span> in the audit trail.
+            Every emergency alert appears instantly on the Admin dashboard with an audible alarm and is recorded in the audit trail.
           </p>
           <div className="mt-4 rounded-xl border border-border bg-secondary/40 p-4 text-sm">
             <p className="flex items-center gap-2">
@@ -130,7 +124,6 @@ function SettingsPage() {
                 <tr className="text-left text-[11px] uppercase tracking-widest text-muted-foreground">
                   <th className="py-2">Employee</th>
                   <th className="py-2">Employee ID</th>
-                  <th className="py-2">Email</th>
                   <th className="py-2 w-44">Role</th>
                 </tr>
               </thead>
@@ -139,7 +132,6 @@ function SettingsPage() {
                   <tr key={m.id} className="border-t border-border">
                     <td className="py-2">{m.employee_name ?? "—"}</td>
                     <td className="py-2 font-mono text-xs">{m.employee_id ?? "—"}</td>
-                    <td className="py-2 text-muted-foreground">{m.email ?? "—"}</td>
                     <td className="py-2">
                       <Select value={m.role ?? "operator"} onValueChange={(v) => void setRole(m.id, v)}>
                         <SelectTrigger>
