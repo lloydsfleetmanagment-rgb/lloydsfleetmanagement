@@ -99,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   )}
                 >
                   <Icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {!collapsed && <span className="truncate">{label(item)}</span>}
                 </Link>
               );
             })}
@@ -169,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   pathname.startsWith(item.to) ? "bg-secondary text-foreground" : "text-muted-foreground",
                 )}
               >
-                {item.label}
+                {label(item)}
               </Link>
             ))}
           </nav>
