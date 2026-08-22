@@ -101,13 +101,13 @@ function DashboardPage() {
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
         title="Mine Control Dashboard"
-        subtitle={`Surjagarh Iron Ore Mine · ${todayISO()} · single source of truth from operator logs`}
+        subtitle={`Surjagarh Iron Ore Mine · ${date} · Shift ${shift} · auto-refreshing live from operator logs`}
         actions={
           <Button
             variant="secondary"
             onClick={() =>
               downloadCsv(
-                `fleetiq-hourly-rom-${todayISO()}.csv`,
+                `fleetiq-hourly-rom-${date}.csv`,
                 hourly.map((h) => ({ Hour: h.hour, ROM_t: h.ROM, BHQ_t: h.BHQ, SHALE_t: h.SHALE, Trips: h.trips })),
               )
             }
