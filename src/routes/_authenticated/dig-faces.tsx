@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Mountain, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useDigFaces } from "@/lib/queries";
 import { DIG_FACE_STATUSES, statusTone } from "@/lib/fleetiq";
@@ -31,32 +32,41 @@ function DigFacesPage() {
   const qc = useQueryClient();
   const { data: faces = [] } = useDigFaces();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ code: "", bench: "", material_code: "ROM", shovel: "" });
+  const [form, setForm] = useState({ name: "", bench: "", material_code: "ROM", shovel: "" });
 
-  const update = async (id: string, patch: Record<string, unknown>) => {
+  const update = async (id: string, patch: Database["public"]["Tables"]["dig_faces"]["Update"]) => {
     const { error } = await supabase.from("dig_faces").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Dig face updated");
     void qc.invalidateQueries({ queryKey: ["dig_faces"] });
   };
 
   const create = async () => {
     const { error } = await supabase.from("dig_faces").insert({
-      code: form.code.trim(),
+      name: form.name.trim(),
       bench: form.bench.trim(),
       material_code: form.material_code,
       shovel: form.shovel.trim() || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Dig face added");
     setOpen(false);
-    setForm({ code: "", bench: "", material_code: "ROM", shovel: "" });
+    setForm({ name: "", bench: "", material_code: "ROM", shovel: "" });
     void qc.invalidateQueries({ queryKey: ["dig_faces"] });
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("dig_faces").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Dig face removed");
     void qc.invalidateQueries({ queryKey: ["dig_faces"] });
   };
@@ -80,7 +90,7 @@ function DigFacesPage() {
           <Panel key={f.id} className="animate-fade-up p-5" style={{ animationDelay: `${i * 50}ms` }}>
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{f.code}</h2>
+                <h2 className="text-lg font-semibold">{f.name}</h2>
                 <p className="text-xs text-muted-foreground">
                   Bench {f.bench} · {f.material_code}
                 </p>
@@ -115,12 +125,11 @@ function DigFacesPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Trucks allocated</Label>
+                <Label className="text-xs">Bench</Label>
                 <Input
-                  type="number"
-                  defaultValue={f.trucks_allocated}
+                  defaultValue={f.bench ?? ""}
                   disabled={!canManage}
-                  onBlur={(e) => void update(f.id, { trucks_allocated: Number(e.target.value) })}
+                  onBlur={(e) => void update(f.id, { bench: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
@@ -149,8 +158,8 @@ function DigFacesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Code</Label>
-              <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="DF-06" />
+              <Label>Name</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="DF-06" />
             </div>
             <div className="space-y-2">
               <Label>Bench</Label>

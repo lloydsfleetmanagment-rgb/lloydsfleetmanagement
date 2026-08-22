@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Factory } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useCrushers, useTodayLogs } from "@/lib/queries";
 import { CRUSHER_STATUSES, fmtNumber, statusTone } from "@/lib/fleetiq";
@@ -39,7 +40,7 @@ function CrushersPage() {
     return m;
   }, [logs]);
 
-  const update = async (id: string, patch: Record<string, unknown>) => {
+  const update = async (id: string, patch: Database["public"]["Tables"]["crushers"]["Update"]) => {
     const { error } = await supabase.from("crushers").update(patch).eq("id", id);
     if (error) {
       toast.error(error.message);
@@ -103,13 +104,10 @@ function CrushersPage() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Downtime today (min)</Label>
-                  <Input
-                    type="number"
-                    defaultValue={c.downtime_min}
-                    disabled={!canManage}
-                    onBlur={(e) => void update(c.id, { downtime_min: Number(e.target.value) })}
-                  />
+                  <Label className="text-xs">Equipment restriction</Label>
+                  <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 text-xs">
+                    {c.sany_only ? "SANY equipment only" : "All equipment"}
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Rated capacity (tph)</Label>
