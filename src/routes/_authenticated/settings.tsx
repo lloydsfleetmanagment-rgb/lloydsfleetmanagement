@@ -114,7 +114,7 @@ function SettingsPage() {
             </p>
             <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
               <li>Admin — full access, user management, delete rights, audit trail</li>
-              <li>Supervisor — view all, edit fleet/production/crushers, no deletes</li>
+              <li>Supervisor — view all, edit fleet/production/screens plant, no deletes</li>
               <li>Operator — log own trips, edit own equipment status, emergency button</li>
             </ul>
           </div>

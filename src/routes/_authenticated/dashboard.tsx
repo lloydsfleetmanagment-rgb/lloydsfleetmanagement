@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — LLOYDS FLEETIQ" },
-      { name: "description", content: "Live production, fleet and crusher KPIs for the Surjagarh Iron Ore Mine." },
+      { name: "description", content: "Live production, fleet and screens plant KPIs for the Surjagarh Iron Ore Mine." },
       { property: "og:title", content: "Dashboard — LLOYDS FLEETIQ" },
-      { property: "og:description", content: "Live production, fleet and crusher KPIs for Surjagarh." },
+      { property: "og:description", content: "Live production, fleet and screens plant KPIs for Surjagarh." },
     ],
   }),
   component: DashboardPage,
@@ -211,7 +211,7 @@ function DashboardPage() {
           </Panel>
 
           <Panel className="p-6">
-            <h2 className="text-lg font-semibold">Crusher intake today</h2>
+            <h2 className="text-lg font-semibold">Screens Plant intake today</h2>
             <div className="mt-4 space-y-3">
               {crusherRom.map((c) => (
                 <div key={c.code} className="flex items-center justify-between rounded-xl border border-border bg-secondary/40 px-3 py-2.5">
@@ -264,7 +264,7 @@ function DashboardPage() {
 
       <Panel className="mt-6 p-6">
         <h2 className="text-lg font-semibold">Lease overview — 348 Ha</h2>
-        <p className="text-sm text-muted-foreground">Stylised mine layout with live dig-face and crusher activity.</p>
+        <p className="text-sm text-muted-foreground">Stylised mine layout with live dig-face and screens plant activity.</p>
         <MineMap logs={logs} />
       </Panel>
     </div>
