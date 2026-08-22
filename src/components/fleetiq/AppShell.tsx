@@ -59,10 +59,13 @@ function LiveClock() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { role, profile, signOut, isAdmin } = useAuth();
+  const { role, profile, signOut, isAdmin, isOperator } = useAuth();
+  const { t } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const items = NAV.filter((n) => (role ? (n.roles as readonly string[]).includes(role) : false));
+  // Only operators see the console in their chosen language.
+  const label = (item: (typeof NAV)[number]) => (isOperator ? t(item.key) : item.label);
 
   return (
     <div className="relative min-h-screen">
