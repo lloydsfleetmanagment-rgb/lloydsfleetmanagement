@@ -74,8 +74,9 @@ export const sendEmergencyEmail = createServerFn({ method: "POST" })
         }),
       });
       if (!res.ok) {
-        console.error("[emergency] email send failed", res.status, await res.text());
-        return { status: "failed" as const, to: TO_EMAIL };
+        const body = await res.text();
+        console.error("[emergency] email send failed", res.status, body);
+        return { status: "failed" as const, to: TO_EMAIL, error: `${res.status}: ${body}` };
       }
       return { status: "sent" as const, to: TO_EMAIL };
     } catch (err) {
