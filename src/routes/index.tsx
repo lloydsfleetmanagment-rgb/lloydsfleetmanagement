@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -77,6 +78,7 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [empId, setEmpId] = useState("");
+  const [role, setRole] = useState("operator");
 
   useEffect(() => {
     const t = setTimeout(() => setIntroDone(true), 2400);
@@ -117,7 +119,7 @@ function LoginPage() {
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { employee_name: name.trim(), employee_id: empId.trim() },
+        data: { employee_name: name.trim(), employee_id: empId.trim(), role },
       },
     });
     setBusy(false);
@@ -256,8 +258,21 @@ function LoginPage() {
                     </button>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="operator">Operator</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  New accounts join as Operator. The first account created becomes Admin.
+                  Your access level is set by the role you select here.
                 </p>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
