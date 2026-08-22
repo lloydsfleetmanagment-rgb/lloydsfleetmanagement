@@ -5,7 +5,8 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { KpiCard, LoadingBlock, Panel, Progress3D, SectionHeader } from "@/components/fleetiq/Cards";
 import { MineMap } from "@/components/fleetiq/MineMap";
 import { useCrushers, useEquipment, useTodayLogs } from "@/lib/queries";
-import { downloadCsv, fmtNumber, todayISO } from "@/lib/fleetiq";
+import { downloadCsv, fmtNumber } from "@/lib/fleetiq";
+import { useShiftClock } from "@/lib/useShiftClock";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -30,7 +31,8 @@ function hourKey(iso: string) {
 }
 
 function DashboardPage() {
-  const { data: logs = [], isLoading } = useTodayLogs();
+  const { date, shift } = useShiftClock();
+  const { data: logs = [], isLoading } = useTodayLogs(date);
   const { data: equipment = [] } = useEquipment();
   const { data: crushers = [] } = useCrushers();
   const [shiftFilter, setShiftFilter] = useState<"ALL" | "A" | "B" | "C">("ALL");
@@ -99,13 +101,13 @@ function DashboardPage() {
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
         title="Mine Control Dashboard"
-        subtitle={`Surjagarh Iron Ore Mine · ${todayISO()} · single source of truth from operator logs`}
+        subtitle={`Surjagarh Iron Ore Mine · ${date} · Shift ${shift} · auto-refreshing live from operator logs`}
         actions={
           <Button
             variant="secondary"
             onClick={() =>
               downloadCsv(
-                `fleetiq-hourly-rom-${todayISO()}.csv`,
+                `fleetiq-hourly-rom-${date}.csv`,
                 hourly.map((h) => ({ Hour: h.hour, ROM_t: h.ROM, BHQ_t: h.BHQ, SHALE_t: h.SHALE, Trips: h.trips })),
               )
             }
