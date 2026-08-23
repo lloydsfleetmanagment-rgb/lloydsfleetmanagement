@@ -405,7 +405,94 @@ const DICTS: Record<LangCode, Dict> = {
   or: { ...or_, ...EXTRAS.or },
 };
 
-type I18nState = { lang: LangCode; setLang: (l: LangCode) => void; t: (key: string) => string };
+/** Word-level dictionary used to translate free-text option labels coming from the
+ *  database (destination names, equipment types). Codes such as TH-1, PROPEL,
+ *  SANDVIK-350 stay untouched because they are proper names on site. */
+const TERMS: Record<LangCode, Record<string, string>> = {
+  en: {},
+  hi: {
+    top: "ऊपरी",
+    bottom: "निचला",
+    dump: "डंप",
+    crusher: "क्रशर",
+    gyratory: "जायरेटरी",
+    reclaimer: "रिक्लेमर",
+    output: "आउटपुट",
+    stock: "स्टॉक",
+    shale: "शेल",
+    bande: "बंदे",
+    dumper: "डंपर",
+    truck: "ट्रक",
+    fines: "फाइन्स",
+    screens: "स्क्रीन",
+    plant: "प्लांट",
+  },
+  te: {
+    top: "పైభాగం",
+    bottom: "కింది భాగం",
+    dump: "డంప్",
+    crusher: "క్రషర్",
+    gyratory: "గైరేటరీ",
+    reclaimer: "రిక్లెయిమర్",
+    output: "అవుట్‌పుట్",
+    stock: "స్టాక్",
+    shale: "షేల్",
+    bande: "బండే",
+    dumper: "డంపర్",
+    truck: "ట్రక్",
+    fines: "ఫైన్స్",
+    screens: "స్క్రీన్స్",
+    plant: "ప్లాంట్",
+  },
+  mr: {
+    top: "वरचा",
+    bottom: "खालचा",
+    dump: "डंप",
+    crusher: "क्रशर",
+    gyratory: "जायरेटरी",
+    reclaimer: "रिक्लेमर",
+    output: "आउटपुट",
+    stock: "स्टॉक",
+    shale: "शेल",
+    bande: "बंदे",
+    dumper: "डंपर",
+    truck: "ट्रक",
+    fines: "फाइन्स",
+    screens: "स्क्रीन",
+    plant: "प्लांट",
+  },
+  or: {
+    top: "ଉପର",
+    bottom: "ତଳ",
+    dump: "ଡମ୍ପ",
+    crusher: "କ୍ରସର",
+    gyratory: "ଜାଇରେଟୋରୀ",
+    reclaimer: "ରିକ୍ଲେମର",
+    output: "ଆଉଟପୁଟ୍",
+    stock: "ଷ୍ଟକ୍",
+    shale: "ଶେଲ୍",
+    bande: "ବାନ୍ଦେ",
+    dumper: "ଡମ୍ପର",
+    truck: "ଟ୍ରକ୍",
+    fines: "ଫାଇନ୍ସ",
+    screens: "ସ୍କ୍ରିନ୍",
+    plant: "ପ୍ଲାଣ୍ଟ",
+  },
+};
+
+const translateName = (lang: LangCode, name: string) =>
+  name
+    .split(/([\s/])/)
+    .map((part) => TERMS[lang][part.toLowerCase()] ?? part)
+    .join("");
+
+type I18nState = {
+  lang: LangCode;
+  setLang: (l: LangCode) => void;
+  t: (key: string) => string;
+  /** Translate a database-supplied label (destination/equipment name). */
+  tn: (name: string) => string;
+};
 
 const I18nContext = createContext<I18nState | null>(null);
 
@@ -425,6 +512,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         window.localStorage.setItem("fleetiq:lang", l);
       },
       t: (key) => DICTS[lang][key] ?? DICTS.en[key] ?? key,
+      tn: (name) => translateName(lang, name ?? ""),
     }),
     [lang],
   );
@@ -436,8 +524,10 @@ const FALLBACK_I18N: I18nState = {
   lang: "en",
   setLang: () => {},
   t: (key) => DICTS.en[key] ?? key,
+  tn: (name) => name,
 };
 
 export function useI18n() {
   return useContext(I18nContext) ?? FALLBACK_I18N;
 }
+
