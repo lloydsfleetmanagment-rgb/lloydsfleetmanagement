@@ -16,6 +16,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { useShiftClock } from "@/lib/useShiftClock";
+import { useShiftAutoExport } from "@/lib/useShiftAutoExport";
 import { LloydsMark, ThriveniMark, WordMark } from "./Brand";
 import { Particles } from "./Particles";
 import { EmergencyWatcher } from "./EmergencyWatcher";
@@ -31,7 +33,7 @@ import {
 
 const NAV = [
   { to: "/dashboard", key: "nav.dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "supervisor", "operator"] },
-  { to: "/operator", key: "nav.operator", label: "Operator Console", icon: ClipboardList, roles: ["admin", "supervisor", "operator"] },
+  { to: "/operator", key: "nav.operator", label: "Operator Console", icon: ClipboardList, roles: ["operator"] },
   { to: "/fleet", key: "nav.fleet", label: "Fleet", icon: Truck, roles: ["admin", "supervisor", "operator"] },
   { to: "/production", key: "nav.production", label: "Production", icon: BarChart3, roles: ["admin", "supervisor", "operator"] },
   { to: "/dig-faces", key: "nav.digfaces", label: "Dig Faces", icon: Mountain, roles: ["admin", "supervisor", "operator"] },
@@ -62,6 +64,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const { role, profile, signOut, isAdmin, isOperator } = useAuth();
   const { t } = useI18n();
+  // Keeps every page on the live mine day/shift and auto-saves the shift that ended.
+  const clock = useShiftClock();
+  useShiftAutoExport(clock.date, clock.shift);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const items = NAV.filter((n) => (role ? (n.roles as readonly string[]).includes(role) : false));
