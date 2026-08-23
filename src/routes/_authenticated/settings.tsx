@@ -115,6 +115,8 @@ function SettingsPage() {
         </Panel>
       </div>
 
+      <ShiftExportPanel />
+
       {isAdmin && (
         <Panel className="mt-6 p-6">
           <h2 className="text-lg font-semibold">Team &amp; access control</h2>
