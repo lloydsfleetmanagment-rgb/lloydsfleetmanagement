@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
-import { useAlerts, useAuditLogs, useOperatorLogs } from "@/lib/queries";
+import { useAuditLogs, useOperatorLogs } from "@/lib/queries";
 import { useAuth } from "@/hooks/useAuth";
 import { downloadCsv, fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
       { title: "Reports — LLOYDS FLEETIQ" },
-      { name: "description", content: "Shift reports, equipment performance, emergency history and audit trail exports." },
+      { name: "description", content: "Shift reports, equipment performance, equipment, operator and audit trail exports." },
       { property: "og:title", content: "Reports — LLOYDS FLEETIQ" },
       { property: "og:description", content: "Exportable mine performance and audit reports." },
     ],
@@ -26,7 +26,6 @@ function ReportsPage() {
   const { isAdmin } = useAuth();
   const [date, setDate] = useState(todayISO());
   const { data: logs = [], isLoading } = useOperatorLogs({ date, limit: 2000 });
-  const { data: alerts = [] } = useAlerts();
   const { data: audit = [] } = useAuditLogs();
 
   const byEquipment = useMemo(() => {
@@ -71,7 +70,6 @@ function ReportsPage() {
         <TabsList className="bg-secondary/60">
           <TabsTrigger value="equipment">Equipment</TabsTrigger>
           <TabsTrigger value="operators">Operators</TabsTrigger>
-          <TabsTrigger value="emergency">Emergency history</TabsTrigger>
           {isAdmin && <TabsTrigger value="audit">Audit trail</TabsTrigger>}
         </TabsList>
 
