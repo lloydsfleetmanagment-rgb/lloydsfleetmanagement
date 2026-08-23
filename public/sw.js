@@ -5,7 +5,9 @@ const CACHE = "fleetiq-v1";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/", "/manifest.webmanifest"]).catch(() => undefined)));
+  event.waitUntil(
+    caches.open(CACHE).then((c) => c.addAll(["/", "/operator", "/manifest.webmanifest"]).catch(() => undefined)),
+  );
 });
 
 self.addEventListener("activate", (event) => {
