@@ -69,6 +69,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   useShiftAutoExport(clock.date, clock.shift);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  const navigate = useNavigate();
+
+  // Operators only ever see their own console.
+  useEffect(() => {
+    if (isOperator && pathname !== "/operator") void navigate({ to: "/operator", replace: true });
+  }, [isOperator, pathname, navigate]);
+
   const items = NAV.filter((n) => (role ? (n.roles as readonly string[]).includes(role) : false));
   // Only operators see the console in their chosen language.
   const label = (item: (typeof NAV)[number]) => (isOperator ? t(item.key) : item.label);
