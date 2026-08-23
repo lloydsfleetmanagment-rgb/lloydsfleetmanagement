@@ -315,24 +315,33 @@ function OperatorConsole() {
         <div className="space-y-5">
           <div className="space-y-2">
             <Label className="text-base">1 · {t("op.equipment")}</Label>
-            <Select
-              value={equipmentId}
-              onValueChange={(v) => {
-                beginEntry();
-                setEquipmentId(v);
-              }}
-            >
-              <SelectTrigger className="h-14 text-base">
-                <SelectValue placeholder={t("op.selectEquipment")} />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {equipment.map((e) => (
-                  <SelectItem key={e.id} value={e.id} className="text-base">
-                    {e.code} · {e.equipment_type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {myVehicle ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/10 p-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("op.myVehicle")}</p>
+                  <p className="font-mono text-xl text-primary">
+                    {myVehicle.code} · {myVehicle.equipment_type}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t("op.vehicleLocked")}</p>
+                </div>
+                <Button variant="secondary" className="h-11" onClick={() => void releaseVehicle()}>
+                  {t("op.changeVehicle")}
+                </Button>
+              </div>
+            ) : (
+              <Select value={equipmentId} onValueChange={(v) => void claimVehicle(v)}>
+                <SelectTrigger className="h-14 text-base">
+                  <SelectValue placeholder={t("op.pickVehicle")} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {availableEquipment.map((e) => (
+                    <SelectItem key={e.id} value={e.id} className="text-base">
+                      {e.code} · {e.equipment_type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="space-y-2">
