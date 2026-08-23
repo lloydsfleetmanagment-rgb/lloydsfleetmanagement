@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
-import { useAlerts, useAuditLogs, useOperatorLogs } from "@/lib/queries";
+import { useAuditLogs, useOperatorLogs } from "@/lib/queries";
 import { useAuth } from "@/hooks/useAuth";
 import { downloadCsv, fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
       { title: "Reports — LLOYDS FLEETIQ" },
-      { name: "description", content: "Shift reports, equipment performance, emergency history and audit trail exports." },
+      { name: "description", content: "Shift reports, equipment and operator performance, and audit trail exports." },
       { property: "og:title", content: "Reports — LLOYDS FLEETIQ" },
       { property: "og:description", content: "Exportable mine performance and audit reports." },
     ],
@@ -26,7 +26,6 @@ function ReportsPage() {
   const { isAdmin } = useAuth();
   const [date, setDate] = useState(todayISO());
   const { data: logs = [], isLoading } = useOperatorLogs({ date, limit: 2000 });
-  const { data: alerts = [] } = useAlerts();
   const { data: audit = [] } = useAuditLogs();
 
   const byEquipment = useMemo(() => {
@@ -71,7 +70,6 @@ function ReportsPage() {
         <TabsList className="bg-secondary/60">
           <TabsTrigger value="equipment">Equipment</TabsTrigger>
           <TabsTrigger value="operators">Operators</TabsTrigger>
-          <TabsTrigger value="emergency">Emergency history</TabsTrigger>
           {isAdmin && <TabsTrigger value="audit">Audit trail</TabsTrigger>}
         </TabsList>
 
@@ -147,49 +145,6 @@ function ReportsPage() {
           </Panel>
         </TabsContent>
 
-        <TabsContent value="emergency">
-          <Panel className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Emergency alert history</h2>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  downloadCsv(
-                    "fleetiq-emergencies.csv",
-                    alerts.map((a) => ({
-                      Time: a.created_at,
-                      Employee: a.employee_name ?? "",
-                      EmployeeID: a.employee_id ?? "",
-                      Login: a.login_id ?? "",
-                      Shift: a.shift ?? "",
-                      Equipment: a.equipment_code ?? "",
-                      Status: a.status,
-                      Message: a.message ?? "",
-                    })),
-                  )
-                }
-              >
-                <Download className="mr-2 h-4 w-4" /> Export
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {alerts.length === 0 && <p className="text-sm text-muted-foreground">No emergency alerts recorded.</p>}
-              {alerts.map((a) => (
-                <div key={a.id} className="rounded-xl border border-border bg-secondary/40 p-3 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium">
-                      {a.employee_name ?? "Unknown"} · {a.employee_id ?? "—"}
-                    </span>
-                    <span className={a.status === "OPEN" ? "text-destructive" : "text-muted-foreground"}>{a.status}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {fmtTime(a.created_at)} · {a.shift ?? "—"} · {a.equipment_code ?? "—"} · {a.message ?? ""}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        </TabsContent>
 
         {isAdmin && (
           <TabsContent value="audit">

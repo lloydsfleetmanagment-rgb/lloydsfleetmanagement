@@ -4,12 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Languages, Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useShiftClock } from "@/lib/useShiftClock";
+import { useOfflineSync } from "@/lib/useOfflineSync";
+import { enqueueLog } from "@/lib/offlineQueue";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EXCAVATOR_GROUPS,
-  SHIFTS,
-  currentShift,
   fmtNumber,
   todayISO,
   tonnesFor,
@@ -58,6 +59,8 @@ function OperatorConsole() {
   const { profile, user } = useAuth();
   const { t, lang, setLang } = useI18n();
   const qc = useQueryClient();
+  const { shift } = useShiftClock();
+  const { pending, online } = useOfflineSync();
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -72,10 +75,9 @@ function OperatorConsole() {
   const [excavator, setExcavator] = useState("");
   const [destination, setDestination] = useState("");
   const [trips, setTrips] = useState("");
-  const [shift, setShift] = useState(currentShift());
   const [remarks, setRemarks] = useState("");
-  const [empId, setEmpId] = useState("");
-  const [empName, setEmpName] = useState("");
+  const empId = profile?.employee_id ?? "";
+  const empName = profile?.employee_name ?? "";
   const [saving, setSaving] = useState(false);
   const [invalidOpen, setInvalidOpen] = useState(false);
   
@@ -176,7 +178,7 @@ function OperatorConsole() {
       return;
     }
     if (!empId.trim() || !empName.trim()) {
-      toast.error("Enter your employee ID and name");
+      toast.error("Your operator profile is missing an employee ID — contact the administrator");
       return;
     }
     if (equipmentBlocked) {
@@ -192,7 +194,7 @@ function OperatorConsole() {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("operator_logs").insert({
+    const payload = {
       shift,
       user_id: user?.id as string,
       employee_id: empId.trim(),
@@ -207,10 +209,33 @@ function OperatorConsole() {
       loading_time_min: liveLoading,
       unloading_time_min: liveUnloading,
       remarks: remarks || null,
-    });
+    };
+
+    // No network in the pit: keep the entry locally and push it automatically later.
+    if (!navigator.onLine) {
+      const queued = enqueueLog(payload);
+      setSaving(false);
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1800);
+      toast.success(`Saved offline · ${queued} entr${queued === 1 ? "y" : "ies"} waiting to sync`);
+      reset();
+      return;
+    }
+
+    const { error } = await supabase.from("operator_logs").insert(payload);
     setSaving(false);
     if (error) {
-      if (error.message.includes("INVALID EQUIPMENT")) setInvalidOpen(true);
+      if (error.message.includes("INVALID EQUIPMENT")) {
+        setInvalidOpen(true);
+        toast.error(error.message);
+        return;
+      }
+      if (/fetch|network/i.test(error.message)) {
+        const queued = enqueueLog(payload);
+        toast.success(`Saved offline · ${queued} entr${queued === 1 ? "y" : "ies"} waiting to sync`);
+        reset();
+        return;
+      }
       toast.error(error.message);
       return;
     }
@@ -257,6 +282,12 @@ function OperatorConsole() {
         subtitle={`${profile?.employee_name ?? "Operator"} · ${t("op.subtitle")} ${shift}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full border px-3 py-1 text-xs ${online ? "border-primary/40 text-primary" : "border-destructive/50 text-destructive"}`}
+            >
+              {online ? "Online" : "Offline"}
+              {pending > 0 ? ` · ${pending} pending` : ""}
+            </span>
             <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
               <SelectTrigger className="w-[150px]">
                 <Languages className="mr-2 h-4 w-4 text-primary" />
@@ -288,25 +319,15 @@ function OperatorConsole() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Employee ID</Label>
-              <Input
-                value={empId}
-                onChange={(e) => {
-                  beginEntry();
-                  setEmpId(e.target.value);
-                }}
-                placeholder="LM-10234"
-              />
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm">
+                {empId || "—"}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Employee name</Label>
-              <Input
-                value={empName}
-                onChange={(e) => {
-                  beginEntry();
-                  setEmpName(e.target.value);
-                }}
-                placeholder="Operator name"
-              />
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 text-sm">
+                {empName || "—"}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>{t("op.equipment")}</Label>
@@ -332,18 +353,10 @@ function OperatorConsole() {
 
             <div className="space-y-2">
               <Label>{t("op.shift")}</Label>
-              <Select value={shift} onValueChange={(v) => setShift(v as typeof shift)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SHIFTS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
+                {shift}
+                <span className="ml-2 font-sans text-[11px] text-muted-foreground">auto by time</span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -438,12 +451,6 @@ function OperatorConsole() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("op.loading")}</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
-                {fmtNumber(liveLoading, 1)} {t("op.min")}
-              </div>
-            </div>
             <div className="space-y-2">
               <Label>{t("op.unloading")}</Label>
               <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
