@@ -127,8 +127,27 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   // Install the offline shell so the app opens in no-network pit areas.
+  // Never register inside the Lovable editor preview / dev — it would serve
+  // stale HTML while you build.
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    const host = window.location.hostname;
+    const blocked =
+      !import.meta.env.PROD ||
+      window.self !== window.top ||
+      host.startsWith("id-preview--") ||
+      host.startsWith("preview--") ||
+      host.endsWith("lovableproject.com") ||
+      host.endsWith("lovableproject-dev.com") ||
+      host.endsWith("beta.lovable.dev") ||
+      new URLSearchParams(window.location.search).has("sw-off");
+    if (blocked) {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => regs.forEach((r) => void r.unregister()))
+        .catch(() => undefined);
+      return;
+    }
     void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
 
@@ -136,11 +155,13 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <I18nProvider>
+          <AppSplash />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Toaster position="top-right" richColors />
         </I18nProvider>
       </AuthProvider>
+
     </QueryClientProvider>
   );
 }
