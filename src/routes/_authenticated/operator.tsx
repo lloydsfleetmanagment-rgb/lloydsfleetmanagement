@@ -57,7 +57,7 @@ const minutesBetween = (from: number, to: number) => Math.max(0, Math.round(((to
 
 function OperatorConsole() {
   const { profile, user } = useAuth();
-  const { t, lang, setLang } = useI18n();
+  const { t, tn, lang, setLang } = useI18n();
   const qc = useQueryClient();
   const { shift } = useShiftClock();
   const { pending, online } = useOfflineSync();
@@ -365,7 +365,7 @@ function OperatorConsole() {
                 <div>
                   <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("op.myVehicle")}</p>
                   <p className="font-mono text-xl text-primary">
-                    {myVehicle.code} · {myVehicle.equipment_type}
+                    {myVehicle.code} · {tn(myVehicle.equipment_type)}
                   </p>
                   <p className="text-xs text-muted-foreground">{t("op.vehicleLocked")}</p>
                 </div>
@@ -381,7 +381,7 @@ function OperatorConsole() {
                 <SelectContent className="max-h-72">
                   {availableEquipment.map((e) => (
                     <SelectItem key={e.id} value={e.id} className="text-base">
-                      {e.code} · {e.equipment_type}
+                      {e.code} · {tn(e.equipment_type)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -431,7 +431,7 @@ function OperatorConsole() {
               <SelectContent>
                 {materials.map((m) => (
                   <SelectItem key={m.code} value={m.code} className="text-base">
-                    {t(`mat.${m.code}`) === `mat.${m.code}` ? m.name : t(`mat.${m.code}`)}
+                    {t(`mat.${m.code}`) === `mat.${m.code}` ? tn(m.name) : t(`mat.${m.code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -447,7 +447,7 @@ function OperatorConsole() {
               <SelectContent>
                 {validDestinations.map((d) => (
                   <SelectItem key={d.code} value={d.code} className="text-base">
-                    {t(`dest.${d.code}`) === `dest.${d.code}` ? d.name : t(`dest.${d.code}`)}
+                    {t(`dest.${d.code}`) === `dest.${d.code}` ? tn(d.name) : t(`dest.${d.code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
