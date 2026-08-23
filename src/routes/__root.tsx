@@ -119,6 +119,12 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Install the offline shell so the app opens in no-network pit areas.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
