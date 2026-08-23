@@ -260,7 +260,7 @@ function OperatorConsole() {
     for (const l of myLogs) {
       if (l.shift !== shift) continue;
       const key = (l.employee_id ?? l.employee_name ?? "unknown").toString();
-      const row = map.get(key) ?? { key, empId: l.employee_id ?? "—", name: l.employee_name ?? "Unnamed", trips: 0, tonnes: 0, entries: 0 };
+      const row = map.get(key) ?? { key, empId: l.employee_id ?? "NA", name: l.employee_name ?? "NA", trips: 0, tonnes: 0, entries: 0 };
       row.trips += l.trips;
       row.tonnes += Number(l.quantity_t);
       row.entries += 1;
@@ -320,13 +320,13 @@ function OperatorConsole() {
             <div className="space-y-2">
               <Label>Employee ID</Label>
               <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm">
-                {empId || "—"}
+                {empId || "NA"}
               </div>
             </div>
             <div className="space-y-2">
               <Label>Employee name</Label>
               <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 text-sm">
-                {empName || "—"}
+                {empName || "NA"}
               </div>
             </div>
             <div className="space-y-2">
@@ -542,7 +542,7 @@ function OperatorConsole() {
               <div key={l.id} className="animate-fade-up rounded-xl border border-border bg-secondary/40 p-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
-                    {l.employee_name ?? "—"} · {l.equipment_code}
+                    {l.employee_name ?? "NA"} · {l.equipment_code}
                   </span>
                   <span className="font-mono tabular-nums text-primary">{fmtNumber(Number(l.quantity_t))} t</span>
                 </div>
