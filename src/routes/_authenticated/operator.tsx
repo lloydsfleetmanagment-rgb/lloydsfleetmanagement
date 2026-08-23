@@ -275,288 +275,251 @@ function OperatorConsole() {
     return { t: tonnes, trips: tripCount };
   }, [myLogs]);
 
+  const steps: { n: number; label: string; done: boolean }[] = [
+    { n: 1, label: t("op.equipment"), done: !!selectedEquipment },
+    { n: 2, label: t("op.excavator"), done: !!excavator },
+    { n: 3, label: t("op.material"), done: !!material },
+    { n: 4, label: t("op.destination"), done: !!destination },
+    { n: 5, label: t("op.trips"), done: !!trips && Number(trips) > 0 },
+  ];
+  const doneCount = steps.filter((s) => s.done).length;
+
   return (
-    <div className="mx-auto max-w-[1300px]">
-      <SectionHeader
-        title={t("op.title")}
-        subtitle={`${profile?.employee_name ?? "Operator"} · ${t("op.subtitle")} ${shift}`}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full border px-3 py-1 text-xs ${online ? "border-primary/40 text-primary" : "border-destructive/50 text-destructive"}`}
+    <div className="mx-auto max-w-[760px] pb-24">
+      {/* Simple header: who you are, which shift, and the language switch. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">{t("op.title")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {empName || "Operator"} · {empId || "NA"} · {t("op.shift")} {shift}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full border px-3 py-1 text-xs ${online ? "border-primary/40 text-primary" : "border-destructive/50 text-destructive"}`}
+          >
+            {online ? "Online" : "Offline"}
+            {pending > 0 ? ` · ${pending}` : ""}
+          </span>
+          <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
+            <SelectTrigger className="h-11 w-[160px] text-base">
+              <Languages className="mr-2 h-5 w-5 text-primary" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((l) => (
+                <SelectItem key={l.code} value={l.code} className="text-base">
+                  {l.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* One big card, one question at a time, top to bottom. */}
+      <Panel className="mt-5 p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{t("op.tripHelp")}</p>
+          <span className="font-mono text-sm tabular-nums text-primary">{doneCount}/5</span>
+        </div>
+
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <Label className="text-base">1 · {t("op.equipment")}</Label>
+            <Select
+              value={equipmentId}
+              onValueChange={(v) => {
+                beginEntry();
+                setEquipmentId(v);
+              }}
             >
-              {online ? "Online" : "Offline"}
-              {pending > 0 ? ` · ${pending} pending` : ""}
-            </span>
-            <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
-              <SelectTrigger className="w-[150px]">
-                <Languages className="mr-2 h-4 w-4 text-primary" />
-                <SelectValue />
+              <SelectTrigger className="h-14 text-base">
+                <SelectValue placeholder={t("op.selectEquipment")} />
               </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((l) => (
-                  <SelectItem key={l.code} value={l.code}>
-                    {l.label}
+              <SelectContent className="max-h-72">
+                {equipment.map((e) => (
+                  <SelectItem key={e.id} value={e.id} className="text-base">
+                    {e.code} · {e.equipment_type}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-        }
-      />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard label={t("op.myTonnage")} value={todayTotals.t} unit="t" />
-        <KpiCard label={t("op.myTrips")} value={todayTotals.trips} delay={60} />
-        <KpiCard label={t("op.entries")} value={myLogs.length} delay={120} />
-      </div>
+          <div className="space-y-2">
+            <Label className="text-base">2 · {t("op.excavator")}</Label>
+            <Select
+              value={excavator}
+              onValueChange={(v) => {
+                beginEntry();
+                setExcavator(v);
+              }}
+            >
+              <SelectTrigger className="h-14 text-base">
+                <SelectValue placeholder={t("op.selectExcavator")} />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {EXCAVATOR_GROUPS.map((g) => (
+                  <SelectGroup key={g.group}>
+                    <SelectLabel>{g.group}</SelectLabel>
+                    {g.items.map((x) => (
+                      <SelectItem key={x} value={x} className="text-base">
+                        {x}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-5">
-        <Panel className="p-6 lg:col-span-3">
-          <h2 className="text-lg font-semibold">{t("op.tripEntry")}</h2>
-          <p className="text-sm text-muted-foreground">{t("op.tripHelp")}</p>
+          <div className="space-y-2">
+            <Label className="text-base">3 · {t("op.material")}</Label>
+            <Select
+              value={material}
+              onValueChange={(v) => {
+                beginEntry();
+                setMaterial(v);
+              }}
+            >
+              <SelectTrigger className="h-14 text-base">
+                <SelectValue placeholder={t("op.selectMaterial")} />
+              </SelectTrigger>
+              <SelectContent>
+                {materials.map((m) => (
+                  <SelectItem key={m.code} value={m.code} className="text-base">
+                    {m.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Employee ID</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm">
-                {empId || "NA"}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Employee name</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 text-sm">
-                {empName || "NA"}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>{t("op.equipment")}</Label>
-              <Select
-                value={equipmentId}
-                onValueChange={(v) => {
+          <div className="space-y-2">
+            <Label className="text-base">4 · {t("op.destination")}</Label>
+            <Select value={destination} onValueChange={pickDestination} disabled={!material}>
+              <SelectTrigger className="h-14 text-base">
+                <SelectValue placeholder={material ? t("op.selectDestination") : t("op.selectMaterialFirst")} />
+              </SelectTrigger>
+              <SelectContent>
+                {validDestinations.map((d) => (
+                  <SelectItem key={d.code} value={d.code} className="text-base">
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-base">5 · {t("op.trips")}</Label>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-14 w-14 text-2xl"
+                onClick={() => {
                   beginEntry();
-                  setEquipmentId(v);
+                  setTrips(String(Math.max(0, Number(trips || 0) - 1)));
                 }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("op.selectEquipment")} />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {equipment.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.code} · {e.equipment_type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.shift")}</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
-                {shift}
-                <span className="ml-2 font-sans text-[11px] text-muted-foreground">auto by time</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.material")}</Label>
-              <Select
-                value={material}
-                onValueChange={(v) => {
-                  beginEntry();
-                  setMaterial(v);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("op.selectMaterial")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {materials.map((m) => (
-                    <SelectItem key={m.code} value={m.code}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.excavator")}</Label>
-              <Select
-                value={excavator}
-                onValueChange={(v) => {
-                  beginEntry();
-                  setExcavator(v);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("op.selectExcavator")} />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {EXCAVATOR_GROUPS.map((g) => (
-                    <SelectGroup key={g.group}>
-                      <SelectLabel>{g.group}</SelectLabel>
-                      {g.items.map((x) => (
-                        <SelectItem key={x} value={x}>
-                          {x}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.destination")}</Label>
-              <Select value={destination} onValueChange={pickDestination} disabled={!material}>
-                <SelectTrigger>
-                  <SelectValue placeholder={material ? t("op.selectDestination") : t("op.selectMaterialFirst")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {validDestinations.map((d) => (
-                    <SelectItem key={d.code} value={d.code}>
-                      {d.name}
-                      {d.allowed_equipment_types.length === 1 ? ` · ${d.allowed_equipment_types[0]} only` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.trips")}</Label>
+                −
+              </Button>
               <Input
                 type="number"
-                min={1}
+                min={0}
+                inputMode="numeric"
                 value={trips}
                 onChange={(e) => {
                   beginEntry();
                   setTrips(e.target.value);
                 }}
                 placeholder="0"
+                className="h-14 flex-1 text-center font-mono text-2xl tabular-nums"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.quantity")}</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums text-primary">
-                {fmtNumber(quantity)} t
-                <span className="ml-2 font-sans text-[11px] text-muted-foreground">
-                  {selectedEquipment
-                    ? `${selectedEquipment.equipment_type === "DUMPER" ? 100 : 70} ${t("op.perTrip")}`
-                    : t("op.selectEquipmentShort")}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t("op.unloading")}</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
-                {fmtNumber(liveUnloading, 1)} {t("op.min")}
-              </div>
-            </div>
-
-            <div className="space-y-2 sm:col-span-2">
-              <Label>{t("op.remarks")}</Label>
-              <Textarea
-                value={remarks}
-                onChange={(e) => {
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-14 w-14 text-2xl"
+                onClick={() => {
                   beginEntry();
-                  setRemarks(e.target.value);
+                  setTrips(String(Number(trips || 0) + 1));
                 }}
-                rows={2}
-              />
+              >
+                +
+              </Button>
             </div>
-          </div>
-
-          {/* Live status of the trip being entered — every field shows NA until the
-              operator fills it, and resets to NA after each saved trip. */}
-          <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-4">
-            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Current trip status</p>
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-              {[
-                { label: t("op.equipment"), value: selectedEquipment?.code },
-                { label: "Loading machine", value: excavator },
-                { label: t("op.material"), value: material },
-                { label: t("op.destination"), value: destination },
-                { label: t("op.trips"), value: trips && Number(trips) > 0 ? trips : "" },
-              ].map((f) => (
-                <div key={f.label}>
-                  <p className="text-[11px] text-muted-foreground">{f.label}</p>
-                  <p className={`font-mono text-sm tabular-nums ${f.value ? "text-primary" : "text-muted-foreground"}`}>
-                    {f.value || "NA"}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <p className="mt-3 text-xs text-muted-foreground">{t("op.timerHint")}</p>
-
-          {equipmentBlocked && (
-            <p className="mt-4 flex items-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4" /> {destination} — {t("op.invalidTitle")}
+            <p className="text-sm text-primary">
+              {fmtNumber(quantity)} t {t("op.quantity").toLowerCase()}
             </p>
-          )}
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button onClick={() => void save()} disabled={saving || equipmentBlocked}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              {t("op.save")}
-            </Button>
-            <Button variant="secondary" onClick={reset}>
-              {t("op.clear")}
-            </Button>
-            <span className="text-xs text-muted-foreground">{t("op.draft")}</span>
-            {savedFlash && (
-              <span className="animate-fade-up ml-auto inline-flex items-center gap-1.5 text-sm text-primary">
-                <CheckCircle2 className="h-4 w-4" /> {t("op.saved")}
-              </span>
-            )}
-          </div>
-        </Panel>
-
-        <Panel className="p-6 lg:col-span-2">
-          <h2 className="text-lg font-semibold">Trips by operator · Shift {shift}</h2>
-          <div className="mt-4 space-y-2">
-            {shiftByOperator.length === 0 && <p className="text-sm text-muted-foreground">{t("op.noEntries")}</p>}
-            {shiftByOperator.map((o) => (
-              <div key={o.key} className="animate-fade-up rounded-xl border border-border bg-secondary/40 p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{o.name}</span>
-                  <span className="font-mono tabular-nums text-primary">{o.trips} trips</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {o.empId} · {fmtNumber(o.tonnes)} t · {o.entries} entries
-                </p>
-              </div>
-            ))}
           </div>
 
-          <h2 className="mt-6 text-lg font-semibold">{t("op.myEntries")}</h2>
-          <div className="mt-4 space-y-2">
-            {myLogs.length === 0 && <p className="text-sm text-muted-foreground">{t("op.noEntries")}</p>}
-            {myLogs.map((l) => (
-              <div key={l.id} className="animate-fade-up rounded-xl border border-border bg-secondary/40 p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">
-                    {l.employee_name ?? "NA"} · {l.equipment_code}
-                  </span>
-                  <span className="font-mono tabular-nums text-primary">{fmtNumber(Number(l.quantity_t))} t</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {(l as { excavator?: string | null }).excavator
-                    ? `${(l as { excavator?: string | null }).excavator} · `
-                    : ""}
-                  {l.material_code} → {l.destination_code} · {l.trips} · L {l.loading_time_min}m / U {l.unloading_time_min}m
-                </p>
-              </div>
-            ))}
+          {/* Remarks stay optional and out of the way. */}
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">{t("op.remarks")}</Label>
+            <Textarea
+              value={remarks}
+              onChange={(e) => {
+                beginEntry();
+                setRemarks(e.target.value);
+              }}
+              rows={2}
+            />
           </div>
-        </Panel>
+        </div>
+
+        {equipmentBlocked && (
+          <p className="mt-4 flex items-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            <AlertTriangle className="h-4 w-4" /> {destination} — {t("op.invalidTitle")}
+          </p>
+        )}
+
+        <div className="mt-6 flex items-center gap-3">
+          <Button
+            onClick={() => void save()}
+            disabled={saving || equipmentBlocked}
+            className="h-14 flex-1 text-base"
+          >
+            {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+            {t("op.save")}
+          </Button>
+          <Button variant="secondary" onClick={reset} className="h-14 px-6 text-base">
+            {t("op.clear")}
+          </Button>
+        </div>
+        {savedFlash && (
+          <p className="animate-fade-up mt-3 flex items-center gap-1.5 text-sm text-primary">
+            <CheckCircle2 className="h-4 w-4" /> {t("op.saved")}
+          </p>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("op.draft")} · {t("op.unloading")}: {fmtNumber(liveUnloading, 1)} {t("op.min")}
+        </p>
+      </Panel>
+
+      {/* Simple day totals and last entries. */}
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <KpiCard label={t("op.myTrips")} value={todayTotals.trips} />
+        <KpiCard label={t("op.myTonnage")} value={todayTotals.t} unit="t" delay={60} />
       </div>
+
+      <Panel className="mt-5 p-5">
+        <h2 className="text-base font-semibold">{t("op.myEntries")}</h2>
+        <div className="mt-3 space-y-2">
+          {myLogs.length === 0 && <p className="text-sm text-muted-foreground">{t("op.noEntries")}</p>}
+          {myLogs.slice(0, 8).map((l) => (
+            <div key={l.id} className="flex items-center justify-between rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+              <span>
+                {l.equipment_code} · {l.material_code} → {l.destination_code}
+              </span>
+              <span className="font-mono tabular-nums text-primary">
+                {l.trips} · {fmtNumber(Number(l.quantity_t))} t
+              </span>
+            </div>
+          ))}
+        </div>
+      </Panel>
 
       <AlertDialog open={invalidOpen} onOpenChange={setInvalidOpen}>
         <AlertDialogContent className="border-destructive/50">
@@ -572,7 +535,7 @@ function OperatorConsole() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   );
 }
+
