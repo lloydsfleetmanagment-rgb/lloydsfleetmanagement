@@ -404,7 +404,7 @@ function OperatorConsole() {
               <SelectContent className="max-h-72">
                 {EXCAVATOR_GROUPS.map((g) => (
                   <SelectGroup key={g.group}>
-                    <SelectLabel>{g.group}</SelectLabel>
+                    <SelectLabel>{t(`exc.${g.group}`)}</SelectLabel>
                     {g.items.map((x) => (
                       <SelectItem key={x} value={x} className="text-base">
                         {x}
@@ -431,7 +431,7 @@ function OperatorConsole() {
               <SelectContent>
                 {materials.map((m) => (
                   <SelectItem key={m.code} value={m.code} className="text-base">
-                    {m.name}
+                    {t(`mat.${m.code}`) === `mat.${m.code}` ? m.name : t(`mat.${m.code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -447,7 +447,7 @@ function OperatorConsole() {
               <SelectContent>
                 {validDestinations.map((d) => (
                   <SelectItem key={d.code} value={d.code} className="text-base">
-                    {d.name}
+                    {t(`dest.${d.code}`) === `dest.${d.code}` ? d.name : t(`dest.${d.code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
