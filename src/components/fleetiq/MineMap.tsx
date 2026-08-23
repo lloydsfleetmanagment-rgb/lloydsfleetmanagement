@@ -7,7 +7,7 @@ const NODES = [
   { code: "TH-3", label: "TH-3 (SANY)", x: 84, y: 62 },
   { code: "TH-4", label: "TH-4", x: 70, y: 78 },
   { code: "TH-5", label: "TH-5", x: 56, y: 88 },
-  { code: "BHQ Dump", label: "BHQ Dump", x: 20, y: 80 },
+  { code: "BHQ-TOP-DUMP", label: "BHQ Top", x: 20, y: 80 },
   { code: "Shale Dump Top", label: "Shale Top", x: 14, y: 26 },
   { code: "Shale Dump Bottom", label: "Shale Bottom", x: 28, y: 52 },
 ];
