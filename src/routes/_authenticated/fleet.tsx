@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEquipment, useTodayLogs, writeAudit, type Equipment } from "@/lib/queries";
 import { EQUIPMENT_STATUSES, fmtNumber, statusTone } from "@/lib/fleetiq";
+import { useShiftClock } from "@/lib/useShiftClock";
 import { LoadingBlock, SectionHeader } from "@/components/fleetiq/Cards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ function FleetPage() {
   const qc = useQueryClient();
   const { data: equipment = [], isLoading } = useEquipment();
   const { data: logs = [] } = useTodayLogs();
+  const { date: shiftDate, shift } = useShiftClock();
   const [filter, setFilter] = useState<"ALL" | "DUMPER" | "SANY">("ALL");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Equipment | null>(null);
@@ -48,6 +50,18 @@ function FleetPage() {
     });
     return m;
   }, [logs]);
+
+  // Location resets to NA at every shift start; it only shows once the operator
+  // logs a destination in the current shift.
+  const shiftLocation = useMemo(() => {
+    const m = new Map<string, string>();
+    logs
+      .filter((l) => l.shift === shift && l.log_date === shiftDate)
+      .slice()
+      .sort((a, b) => a.logged_at.localeCompare(b.logged_at))
+      .forEach((l) => m.set(l.equipment_code, l.destination_code));
+    return m;
+  }, [logs, shift, shiftDate]);
 
   const list = equipment.filter(
     (e) => (filter === "ALL" || e.equipment_type === filter) && e.code.toLowerCase().includes(search.toLowerCase()),
@@ -160,7 +174,7 @@ function FleetPage() {
                   </div>
                   <div>
                     <p className="text-muted-foreground">Location</p>
-                    <p className="truncate">{e.location}</p>
+                    <p className="truncate">{shiftLocation.get(e.code) ?? "NA"}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Cycles</p>
@@ -211,9 +225,10 @@ function FleetPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Current location</Label>
+                  <Label>Current location (shift {shift})</Label>
                   <Input
-                    defaultValue={selected.location}
+                    key={`${selected.id}-${shift}`}
+                    defaultValue={shiftLocation.get(selected.code) ?? "NA"}
                     disabled={!canEdit(selected)}
                     onBlur={(e) => void saveSelected({ location: e.target.value })}
                   />
