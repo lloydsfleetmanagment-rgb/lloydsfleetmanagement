@@ -471,6 +471,28 @@ function OperatorConsole() {
             </div>
           </div>
 
+          {/* Live status of the trip being entered — every field shows NA until the
+              operator fills it, and resets to NA after each saved trip. */}
+          <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-4">
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Current trip status</p>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {[
+                { label: t("op.equipment"), value: selectedEquipment?.code },
+                { label: "Loading machine", value: excavator },
+                { label: t("op.material"), value: material },
+                { label: t("op.destination"), value: destination },
+                { label: t("op.trips"), value: trips && Number(trips) > 0 ? trips : "" },
+              ].map((f) => (
+                <div key={f.label}>
+                  <p className="text-[11px] text-muted-foreground">{f.label}</p>
+                  <p className={`font-mono text-sm tabular-nums ${f.value ? "text-primary" : "text-muted-foreground"}`}>
+                    {f.value || "NA"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <p className="mt-3 text-xs text-muted-foreground">{t("op.timerHint")}</p>
 
           {equipmentBlocked && (
