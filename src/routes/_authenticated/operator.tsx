@@ -112,6 +112,51 @@ function OperatorConsole() {
     [destinations, material],
   );
 
+  // One tab per dumper: the vehicle claimed with this employee login stays
+  // assigned until the operator releases it.
+  const myVehicle = useMemo(
+    () => equipment.find((e) => e.assigned_user_id && e.assigned_user_id === user?.id) ?? null,
+    [equipment, user?.id],
+  );
+  const availableEquipment = useMemo(
+    () => equipment.filter((e) => !e.assigned_user_id || e.assigned_user_id === user?.id),
+    [equipment, user?.id],
+  );
+
+  useEffect(() => {
+    if (myVehicle && equipmentId !== myVehicle.id) setEquipmentId(myVehicle.id);
+  }, [myVehicle, equipmentId]);
+
+  const claimVehicle = async (id: string) => {
+    beginEntry();
+    setEquipmentId(id);
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from("equipment")
+      .update({
+        assigned_user_id: user.id,
+        operator_employee_id: empId || null,
+        operator_name: empName || null,
+      })
+      .eq("id", id)
+      .is("assigned_user_id", null);
+    if (error) {
+      toast.error(t("op.vehicleTaken"));
+      setEquipmentId("");
+      return;
+    }
+    toast.success(t("op.vehicleAssigned"));
+    void qc.invalidateQueries({ queryKey: ["equipment"] });
+  };
+
+  const releaseVehicle = async () => {
+    if (!myVehicle) return;
+    await supabase.from("equipment").update({ assigned_user_id: null }).eq("id", myVehicle.id);
+    setEquipmentId("");
+    toast.success(t("op.vehicleReleased"));
+    void qc.invalidateQueries({ queryKey: ["equipment"] });
+  };
+
   // Destination list depends on material — clear invalid selections immediately.
   useEffect(() => {
     if (destination && !validDestinations.some((d) => d.code === destination)) {
