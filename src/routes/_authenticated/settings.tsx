@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck } from "lucide-react";
+import { FolderOpen, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeam, writeAudit } from "@/lib/queries";
@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  exportFolderName,
+  exportShift,
+  folderPickingSupported,
+  pickExportFolder,
+  previousShiftWindow,
+} from "@/lib/shiftExport";
+import { currentShift, todayISO } from "@/lib/fleetiq";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -156,5 +164,77 @@ function SettingsPage() {
         </Panel>
       )}
     </div>
+  );
+}
+
+function ShiftExportPanel() {
+  const [folder, setFolder] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const supported = folderPickingSupported();
+
+  useEffect(() => {
+    void exportFolderName().then(setFolder);
+  }, []);
+
+  const choose = async () => {
+    try {
+      const handle = await pickExportFolder();
+      if (handle) {
+        setFolder(handle.name);
+        toast.success(`Shift reports will be saved to "${handle.name}"`);
+      }
+    } catch {
+      /* picker dismissed */
+    }
+  };
+
+  const exportNow = async () => {
+    setBusy(true);
+    try {
+      const win = previousShiftWindow(todayISO(), currentShift());
+      const { rows, target } = await exportShift(win);
+      toast.success(
+        target === "folder"
+          ? `Shift ${win.shift} (${win.date}) — ${rows} entries saved to "${folder}"`
+          : `Shift ${win.shift} (${win.date}) — ${rows} entries downloaded`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel className="mt-6 p-6">
+      <h2 className="text-lg font-semibold">Automatic shift-end export</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        At every shift change (06:00 · 14:00 · 22:00 IST) the whole app refreshes to the new shift and the shift that
+        just ended is written as a material-wise Excel workbook into a folder on this PC. All history stays in the
+        database — nothing is deleted.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {supported ? (
+          <Button variant="secondary" onClick={() => void choose()}>
+            <FolderOpen className="mr-2 h-4 w-4" />
+            {folder ? "Change folder" : "Choose save folder"}
+          </Button>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            This browser cannot save straight to a folder — exports will download to your Downloads folder instead.
+            Use Chrome or Edge on desktop for direct folder saving.
+          </p>
+        )}
+        <Button onClick={() => void exportNow()} disabled={busy}>
+          {busy ? "Exporting…" : "Export last shift now"}
+        </Button>
+        {folder && (
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
+            Saving to: {folder}
+          </span>
+        )}
+      </div>
+    </Panel>
   );
 }
