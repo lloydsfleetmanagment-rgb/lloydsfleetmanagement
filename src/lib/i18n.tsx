@@ -424,7 +424,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         setLangState(l);
         window.localStorage.setItem("fleetiq:lang", l);
       },
-      t: (key) => DICTS[lang][key] ?? en[key] ?? key,
+      t: (key) => DICTS[lang][key] ?? DICTS.en[key] ?? key,
     }),
     [lang],
   );
@@ -435,7 +435,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 const FALLBACK_I18N: I18nState = {
   lang: "en",
   setLang: () => {},
-  t: (key) => en[key] ?? key,
+  t: (key) => DICTS.en[key] ?? key,
 };
 
 export function useI18n() {
