@@ -11,7 +11,6 @@ import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudi
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EXCAVATOR_GROUPS,
-  currentShift,
   fmtNumber,
   todayISO,
   tonnesFor,

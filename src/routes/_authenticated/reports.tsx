@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
       { title: "Reports — LLOYDS FLEETIQ" },
-      { name: "description", content: "Shift reports, equipment performance, equipment, operator and audit trail exports." },
+      { name: "description", content: "Shift reports, equipment and operator performance, and audit trail exports." },
       { property: "og:title", content: "Reports — LLOYDS FLEETIQ" },
       { property: "og:description", content: "Exportable mine performance and audit reports." },
     ],
