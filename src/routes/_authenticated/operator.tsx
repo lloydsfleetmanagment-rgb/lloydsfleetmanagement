@@ -4,6 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Languages, Loader2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useShiftClock } from "@/lib/useShiftClock";
+import { useOfflineSync } from "@/lib/useOfflineSync";
+import { enqueueLog } from "@/lib/offlineQueue";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
@@ -58,6 +61,8 @@ function OperatorConsole() {
   const { profile, user } = useAuth();
   const { t, lang, setLang } = useI18n();
   const qc = useQueryClient();
+  const { shift } = useShiftClock();
+  const { pending, online } = useOfflineSync();
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -72,10 +77,9 @@ function OperatorConsole() {
   const [excavator, setExcavator] = useState("");
   const [destination, setDestination] = useState("");
   const [trips, setTrips] = useState("");
-  const [shift, setShift] = useState(currentShift());
   const [remarks, setRemarks] = useState("");
-  const [empId, setEmpId] = useState("");
-  const [empName, setEmpName] = useState("");
+  const empId = profile?.employee_id ?? "";
+  const empName = profile?.employee_name ?? "";
   const [saving, setSaving] = useState(false);
   const [invalidOpen, setInvalidOpen] = useState(false);
   
@@ -176,7 +180,7 @@ function OperatorConsole() {
       return;
     }
     if (!empId.trim() || !empName.trim()) {
-      toast.error("Enter your employee ID and name");
+      toast.error("Your operator profile is missing an employee ID — contact the administrator");
       return;
     }
     if (equipmentBlocked) {
@@ -288,25 +292,15 @@ function OperatorConsole() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Employee ID</Label>
-              <Input
-                value={empId}
-                onChange={(e) => {
-                  beginEntry();
-                  setEmpId(e.target.value);
-                }}
-                placeholder="LM-10234"
-              />
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm">
+                {empId || "—"}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Employee name</Label>
-              <Input
-                value={empName}
-                onChange={(e) => {
-                  beginEntry();
-                  setEmpName(e.target.value);
-                }}
-                placeholder="Operator name"
-              />
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 text-sm">
+                {empName || "—"}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>{t("op.equipment")}</Label>
@@ -332,18 +326,10 @@ function OperatorConsole() {
 
             <div className="space-y-2">
               <Label>{t("op.shift")}</Label>
-              <Select value={shift} onValueChange={(v) => setShift(v as typeof shift)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SHIFTS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
+                {shift}
+                <span className="ml-2 font-sans text-[11px] text-muted-foreground">auto by time</span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -438,12 +424,6 @@ function OperatorConsole() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t("op.loading")}</Label>
-              <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
-                {fmtNumber(liveLoading, 1)} {t("op.min")}
-              </div>
-            </div>
             <div className="space-y-2">
               <Label>{t("op.unloading")}</Label>
               <div className="flex h-9 items-center rounded-md border border-input bg-secondary/50 px-3 font-mono text-sm tabular-nums">
