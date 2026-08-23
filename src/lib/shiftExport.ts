@@ -165,6 +165,9 @@ export async function fetchShiftRows({ date, shift }: ShiftWindow): Promise<Expo
     .order("logged_at", { ascending: true });
   if (error) throw error;
 
+  const { data: dests } = await supabase.from("destinations").select("code,name");
+  const names = new Map((dests ?? []).map((d) => [d.code, d.name]));
+
   return (data ?? []).map((l) => ({
     Date: l.log_date,
     Shift: l.shift,
@@ -177,6 +180,7 @@ export async function fetchShiftRows({ date, shift }: ShiftWindow): Promise<Expo
     "Dig Face": l.dig_face ?? "",
     Material: l.material_code,
     Destination: l.destination_code,
+    Location: names.get(l.destination_code) ?? l.destination_code,
     Trips: l.trips,
     "Quantity (t)": Number(l.quantity_t),
     "Loading (min)": Number(l.loading_time_min),

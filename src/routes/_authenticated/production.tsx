@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { KpiCard, LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
-import { useOperatorLogs } from "@/lib/queries";
+import { useDestinations, useOperatorLogs } from "@/lib/queries";
 import { fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
 import { downloadMaterialWorkbook } from "@/lib/excel";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,11 @@ function ProductionPage() {
   const [date, setDate] = useState(todayISO());
   const [shift, setShift] = useState<"ALL" | "A" | "B" | "C">("ALL");
   const { data: logs = [], isLoading } = useOperatorLogs({ date, limit: 2000 });
+  const { data: destinations = [] } = useDestinations();
+  const locationName = useMemo(() => {
+    const map = new Map(destinations.map((d) => [d.code, d.name]));
+    return (code: string) => map.get(code) ?? code;
+  }, [destinations]);
 
   const rows = useMemo(() => logs.filter((l) => shift === "ALL" || l.shift === shift), [logs, shift]);
 
@@ -89,6 +94,7 @@ function ProductionPage() {
                       Excavator: x.excavator ?? "",
                       Material: r.material_code,
                       Destination: r.destination_code,
+                      Location: locationName(r.destination_code),
                       "Loading time (min)": r.loading_time_min ?? 0,
                       "Unloading time (min)": r.unloading_time_min ?? 0,
                       Trips: r.trips,
