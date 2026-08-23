@@ -297,7 +297,113 @@ const or_: Dict = {
   "op.timerHint": "ଏଣ୍ଟ୍ରି ଆରମ୍ଭ ହେବା ମାତ୍ରେ ଟାଇମର ଚାଲୁ ହେଲା।",
 };
 
-const DICTS: Record<LangCode, Dict> = { en, hi, te, mr, or: or_ };
+/** Option labels shown inside dropdowns (materials, excavator groups) plus
+ *  the vehicle-assignment strings. Kept separate so every dictionary stays in sync. */
+const EXTRAS: Record<LangCode, Dict> = {
+  en: {
+    "mat.ROM": "ROM (raw ore)",
+    "mat.BHQ": "BHQ",
+    "mat.SHALE": "Shale",
+    "mat.FINES": "Fines",
+    "mat.5-18": "5-18",
+    "mat.10*30": "10*30",
+    "mat.40+": "40+",
+    "exc.1200 Diesel": "1200 Diesel",
+    "exc.1200 EV": "1200 EV",
+    "exc.2500 Class": "2500 Class",
+    "op.myVehicle": "My vehicle",
+    "op.vehicleLocked": "Assigned to your employee ID",
+    "op.pickVehicle": "Select your dumper / Sany for this shift",
+    "op.changeVehicle": "Change vehicle",
+    "op.vehicleAssigned": "Vehicle assigned to you",
+    "op.vehicleReleased": "Vehicle released",
+    "op.vehicleTaken": "That vehicle is already assigned to another operator",
+  },
+  hi: {
+    "mat.ROM": "ROM (कच्चा अयस्क)",
+    "mat.BHQ": "BHQ",
+    "mat.SHALE": "शेल",
+    "mat.FINES": "फाइन्स",
+    "mat.5-18": "5-18",
+    "mat.10*30": "10*30",
+    "mat.40+": "40+",
+    "exc.1200 Diesel": "1200 डीज़ल",
+    "exc.1200 EV": "1200 ईवी",
+    "exc.2500 Class": "2500 श्रेणी",
+    "op.myVehicle": "मेरा वाहन",
+    "op.vehicleLocked": "आपकी कर्मचारी आईडी से जुड़ा",
+    "op.pickVehicle": "इस शिफ्ट के लिए अपना डंपर / सैनी चुनें",
+    "op.changeVehicle": "वाहन बदलें",
+    "op.vehicleAssigned": "वाहन आपको सौंपा गया",
+    "op.vehicleReleased": "वाहन मुक्त किया गया",
+    "op.vehicleTaken": "यह वाहन पहले से किसी अन्य ऑपरेटर को सौंपा गया है",
+  },
+  te: {
+    "mat.ROM": "ROM (ముడి ఖనిజం)",
+    "mat.BHQ": "BHQ",
+    "mat.SHALE": "షేల్",
+    "mat.FINES": "ఫైన్స్",
+    "mat.5-18": "5-18",
+    "mat.10*30": "10*30",
+    "mat.40+": "40+",
+    "exc.1200 Diesel": "1200 డీజిల్",
+    "exc.1200 EV": "1200 ఈవీ",
+    "exc.2500 Class": "2500 తరగతి",
+    "op.myVehicle": "నా వాహనం",
+    "op.vehicleLocked": "మీ ఉద్యోగి ఐడీకి కేటాయించబడింది",
+    "op.pickVehicle": "ఈ షిఫ్ట్ కోసం మీ డంపర్ / సాని ఎంచుకోండి",
+    "op.changeVehicle": "వాహనం మార్చండి",
+    "op.vehicleAssigned": "వాహనం మీకు కేటాయించబడింది",
+    "op.vehicleReleased": "వాహనం విడుదల చేయబడింది",
+    "op.vehicleTaken": "ఆ వాహనం ఇప్పటికే మరో ఆపరేటర్‌కు కేటాయించబడింది",
+  },
+  mr: {
+    "mat.ROM": "ROM (कच्चे खनिज)",
+    "mat.BHQ": "BHQ",
+    "mat.SHALE": "शेल",
+    "mat.FINES": "फाइन्स",
+    "mat.5-18": "5-18",
+    "mat.10*30": "10*30",
+    "mat.40+": "40+",
+    "exc.1200 Diesel": "1200 डिझेल",
+    "exc.1200 EV": "1200 ईव्ही",
+    "exc.2500 Class": "2500 वर्ग",
+    "op.myVehicle": "माझे वाहन",
+    "op.vehicleLocked": "तुमच्या कर्मचारी आयडीशी जोडलेले",
+    "op.pickVehicle": "या शिफ्टसाठी तुमचा डंपर / सॅनी निवडा",
+    "op.changeVehicle": "वाहन बदला",
+    "op.vehicleAssigned": "वाहन तुम्हाला दिले गेले",
+    "op.vehicleReleased": "वाहन मोकळे केले",
+    "op.vehicleTaken": "हे वाहन आधीच दुसऱ्या ऑपरेटरला दिले आहे",
+  },
+  or: {
+    "mat.ROM": "ROM (କଞ୍ଚା ଖଣିଜ)",
+    "mat.BHQ": "BHQ",
+    "mat.SHALE": "ଶେଲ୍",
+    "mat.FINES": "ଫାଇନ୍ସ",
+    "mat.5-18": "5-18",
+    "mat.10*30": "10*30",
+    "mat.40+": "40+",
+    "exc.1200 Diesel": "1200 ଡିଜେଲ",
+    "exc.1200 EV": "1200 ଇଭି",
+    "exc.2500 Class": "2500 ଶ୍ରେଣୀ",
+    "op.myVehicle": "ମୋ ଯାନ",
+    "op.vehicleLocked": "ଆପଣଙ୍କ କର୍ମଚାରୀ ID ସହ ଯୋଡ଼ାଯାଇଛି",
+    "op.pickVehicle": "ଏହି ସିଫ୍ଟ ପାଇଁ ଆପଣଙ୍କ ଡମ୍ପର / ସାନି ବାଛନ୍ତୁ",
+    "op.changeVehicle": "ଯାନ ବଦଳାନ୍ତୁ",
+    "op.vehicleAssigned": "ଯାନ ଆପଣଙ୍କୁ ଦିଆଗଲା",
+    "op.vehicleReleased": "ଯାନ ମୁକ୍ତ କରାଗଲା",
+    "op.vehicleTaken": "ସେହି ଯାନ ପୂର୍ବରୁ ଅନ୍ୟ ଅପରେଟରଙ୍କୁ ଦିଆଯାଇଛି",
+  },
+};
+
+const DICTS: Record<LangCode, Dict> = {
+  en: { ...en, ...EXTRAS.en },
+  hi: { ...hi, ...EXTRAS.hi },
+  te: { ...te, ...EXTRAS.te },
+  mr: { ...mr, ...EXTRAS.mr },
+  or: { ...or_, ...EXTRAS.or },
+};
 
 type I18nState = { lang: LangCode; setLang: (l: LangCode) => void; t: (key: string) => string };
 
@@ -318,7 +424,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         setLangState(l);
         window.localStorage.setItem("fleetiq:lang", l);
       },
-      t: (key) => DICTS[lang][key] ?? en[key] ?? key,
+      t: (key) => DICTS[lang][key] ?? DICTS.en[key] ?? key,
     }),
     [lang],
   );
@@ -329,7 +435,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 const FALLBACK_I18N: I18nState = {
   lang: "en",
   setLang: () => {},
-  t: (key) => en[key] ?? key,
+  t: (key) => DICTS.en[key] ?? key,
 };
 
 export function useI18n() {

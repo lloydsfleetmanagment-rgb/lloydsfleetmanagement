@@ -112,6 +112,51 @@ function OperatorConsole() {
     [destinations, material],
   );
 
+  // One tab per dumper: the vehicle claimed with this employee login stays
+  // assigned until the operator releases it.
+  const myVehicle = useMemo(
+    () => equipment.find((e) => e.assigned_user_id && e.assigned_user_id === user?.id) ?? null,
+    [equipment, user?.id],
+  );
+  const availableEquipment = useMemo(
+    () => equipment.filter((e) => !e.assigned_user_id || e.assigned_user_id === user?.id),
+    [equipment, user?.id],
+  );
+
+  useEffect(() => {
+    if (myVehicle && equipmentId !== myVehicle.id) setEquipmentId(myVehicle.id);
+  }, [myVehicle, equipmentId]);
+
+  const claimVehicle = async (id: string) => {
+    beginEntry();
+    setEquipmentId(id);
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from("equipment")
+      .update({
+        assigned_user_id: user.id,
+        operator_employee_id: empId || null,
+        operator_name: empName || null,
+      })
+      .eq("id", id)
+      .is("assigned_user_id", null);
+    if (error) {
+      toast.error(t("op.vehicleTaken"));
+      setEquipmentId("");
+      return;
+    }
+    toast.success(t("op.vehicleAssigned"));
+    void qc.invalidateQueries({ queryKey: ["equipment"] });
+  };
+
+  const releaseVehicle = async () => {
+    if (!myVehicle) return;
+    await supabase.from("equipment").update({ assigned_user_id: null }).eq("id", myVehicle.id);
+    setEquipmentId("");
+    toast.success(t("op.vehicleReleased"));
+    void qc.invalidateQueries({ queryKey: ["equipment"] });
+  };
+
   // Destination list depends on material — clear invalid selections immediately.
   useEffect(() => {
     if (destination && !validDestinations.some((d) => d.code === destination)) {
@@ -315,24 +360,33 @@ function OperatorConsole() {
         <div className="space-y-5">
           <div className="space-y-2">
             <Label className="text-base">1 · {t("op.equipment")}</Label>
-            <Select
-              value={equipmentId}
-              onValueChange={(v) => {
-                beginEntry();
-                setEquipmentId(v);
-              }}
-            >
-              <SelectTrigger className="h-14 text-base">
-                <SelectValue placeholder={t("op.selectEquipment")} />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {equipment.map((e) => (
-                  <SelectItem key={e.id} value={e.id} className="text-base">
-                    {e.code} · {e.equipment_type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {myVehicle ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/10 p-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("op.myVehicle")}</p>
+                  <p className="font-mono text-xl text-primary">
+                    {myVehicle.code} · {myVehicle.equipment_type}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t("op.vehicleLocked")}</p>
+                </div>
+                <Button variant="secondary" className="h-11" onClick={() => void releaseVehicle()}>
+                  {t("op.changeVehicle")}
+                </Button>
+              </div>
+            ) : (
+              <Select value={equipmentId} onValueChange={(v) => void claimVehicle(v)}>
+                <SelectTrigger className="h-14 text-base">
+                  <SelectValue placeholder={t("op.pickVehicle")} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {availableEquipment.map((e) => (
+                    <SelectItem key={e.id} value={e.id} className="text-base">
+                      {e.code} · {e.equipment_type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -350,7 +404,7 @@ function OperatorConsole() {
               <SelectContent className="max-h-72">
                 {EXCAVATOR_GROUPS.map((g) => (
                   <SelectGroup key={g.group}>
-                    <SelectLabel>{g.group}</SelectLabel>
+                    <SelectLabel>{t(`exc.${g.group}`)}</SelectLabel>
                     {g.items.map((x) => (
                       <SelectItem key={x} value={x} className="text-base">
                         {x}
@@ -377,7 +431,7 @@ function OperatorConsole() {
               <SelectContent>
                 {materials.map((m) => (
                   <SelectItem key={m.code} value={m.code} className="text-base">
-                    {m.name}
+                    {t(`mat.${m.code}`) === `mat.${m.code}` ? m.name : t(`mat.${m.code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -393,7 +447,7 @@ function OperatorConsole() {
               <SelectContent>
                 {validDestinations.map((d) => (
                   <SelectItem key={d.code} value={d.code} className="text-base">
-                    {d.name}
+                    {t(`dest.${d.code}`) === `dest.${d.code}` ? d.name : t(`dest.${d.code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
