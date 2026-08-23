@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Truck,
