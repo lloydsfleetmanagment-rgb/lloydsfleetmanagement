@@ -32,7 +32,7 @@ function hourKey(iso: string) {
 
 function DashboardPage() {
   const { date, shift } = useShiftClock();
-  const { data: logs = [], isLoading } = useTodayLogs(date);
+  const { data: logs = [], isLoading, dataUpdatedAt } = useTodayLogs(date);
   const { data: equipment = [] } = useEquipment();
   const { data: crushers = [] } = useCrushers();
   const [shiftFilter, setShiftFilter] = useState<"ALL" | "A" | "B" | "C">("ALL");
@@ -42,10 +42,17 @@ function DashboardPage() {
     const rom = logs.filter((l) => l.material_code === "ROM").reduce((s, l) => s + Number(l.quantity_t), 0);
     const bhq = logs.filter((l) => l.material_code === "BHQ").reduce((s, l) => s + Number(l.quantity_t), 0);
     const shale = logs.filter((l) => l.material_code === "SHALE").reduce((s, l) => s + Number(l.quantity_t), 0);
-    const active = equipment.filter((e) => e.status === "ACTIVE").length;
+    // Active = trucks that actually logged a trip today (resets automatically each day).
+    const active = new Set(logs.map((l) => l.equipment_code).filter(Boolean)).size;
     const trips = logs.reduce((s, l) => s + l.trips, 0);
     return { total, rom, bhq, shale, active, trips };
-  }, [logs, equipment]);
+  }, [logs]);
+
+  const lastUpdated = new Date(dataUpdatedAt || Date.now()).toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const hourly = useMemo(() => {
     const rows = Array.from({ length: 24 }, (_, h) => ({ hour: `${String(h).padStart(2, "0")}:00`, ROM: 0, BHQ: 0, SHALE: 0, trips: 0 }));
@@ -122,7 +129,13 @@ function DashboardPage() {
         <KpiCard label="ROM" value={stats.rom} unit="t" hint="Hematite dispatched" icon={<Layers className="h-4 w-4" />} delay={60} />
         <KpiCard label="BHQ" value={stats.bhq} unit="t" hint="Banded hematite quartzite" icon={<Layers className="h-4 w-4" />} delay={120} />
         <KpiCard label="SHALE" value={stats.shale} unit="t" hint="Waste / shale dispatch" icon={<Layers className="h-4 w-4" />} delay={180} />
-        <KpiCard label="Active Trucks" value={stats.active} hint={`${equipment.length} in fleet`} icon={<Truck className="h-4 w-4" />} delay={240} />
+        <KpiCard
+          label="Active Trucks"
+          value={stats.active}
+          hint={`Ran today (${date}) · ${equipment.length} in fleet · updated ${lastUpdated} IST`}
+          icon={<Truck className="h-4 w-4" />}
+          delay={240}
+        />
         <KpiCard label="Total Trips" value={stats.trips} hint="All materials today" icon={<Activity className="h-4 w-4" />} delay={300} />
 
       </div>
