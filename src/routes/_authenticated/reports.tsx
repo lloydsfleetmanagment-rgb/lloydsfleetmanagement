@@ -54,6 +54,33 @@ function ReportsPage() {
     return Array.from(m, ([id, v]) => ({ id, ...v })).sort((a, b) => b.tonnes - a.tonnes);
   }, [logs]);
 
+  /** Trip-level rows, oldest first, used for the material-wise Excel export. */
+  const detailRows = useMemo<ExportRow[]>(
+    () =>
+      [...logs]
+        .sort((a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime())
+        .map((l) => ({
+          Date: l.log_date,
+          Shift: l.shift,
+          Time: fmtTime(l.logged_at),
+          "Employee ID": l.employee_id ?? "",
+          "Employee Name": l.employee_name ?? "",
+          Equipment: l.equipment_code,
+          "Equipment Type": l.equipment_type,
+          Excavator: l.excavator ?? "",
+          "Dig Face": l.dig_face ?? "",
+          Material: l.material_code,
+          Destination: l.destination_code,
+          Trips: l.trips,
+          "Quantity (t)": Number(l.quantity_t),
+          Remarks: l.remarks ?? "",
+        })),
+    [logs],
+  );
+
+  const exportExcel = () => downloadMaterialWorkbook(`fleetiq-report-${date}.xlsx`, detailRows);
+
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
