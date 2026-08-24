@@ -67,7 +67,7 @@ function ReportsPage() {
           "Employee Name": l.employee_name ?? "",
           Equipment: l.equipment_code,
           "Equipment Type": l.equipment_type,
-          Excavator: l.excavator ?? "",
+          Excavator: (l as { excavator?: string | null }).excavator ?? "",
           "Dig Face": l.dig_face ?? "",
           Material: l.material_code,
           Destination: l.destination_code,
@@ -105,7 +105,7 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Equipment performance</h2>
-              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-equipment-${date}.csv`, byEquipment)}>
+              <Button variant="secondary" onClick={exportExcel}>
                 <Download className="mr-2 h-4 w-4" /> Export
               </Button>
             </div>
@@ -146,7 +146,7 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Operator performance</h2>
-              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-operators-${date}.csv`, byOperator)}>
+              <Button variant="secondary" onClick={exportExcel}>
                 <Download className="mr-2 h-4 w-4" /> Export
               </Button>
             </div>
