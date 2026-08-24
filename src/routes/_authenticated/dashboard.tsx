@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Layers, Truck } from "lucide-react";
+import { Activity, Download, Layers, Truck } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { KpiCard, LoadingBlock, Panel, Progress3D, SectionHeader } from "@/components/fleetiq/Cards";
 import { MineMap } from "@/components/fleetiq/MineMap";
@@ -9,6 +9,7 @@ import { downloadCsv, fmtNumber } from "@/lib/fleetiq";
 import { useShiftClock } from "@/lib/useShiftClock";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -80,6 +81,56 @@ function DashboardPage() {
       };
     });
   }, [logs]);
+
+  // Shift-wise material-wise production: every material logged today, broken by A/B/C.
+  const shiftMaterialData = useMemo(() => {
+    const materialCodes = Array.from(new Set(logs.map((l) => l.material_code))).sort();
+    const shifts = ["A", "B", "C"] as const;
+    const rows = shifts.map((shift) => {
+      const shiftLogs = logs.filter((l) => l.shift === shift);
+      const row: Record<string, number | string> = { shift };
+      let total = 0;
+      let trips = 0;
+      materialCodes.forEach((code) => {
+        const qty = shiftLogs.filter((l) => l.material_code === code).reduce((s, l) => s + Number(l.quantity_t), 0);
+        const tr = shiftLogs.filter((l) => l.material_code === code).reduce((s, l) => s + l.trips, 0);
+        row[`${code}_t`] = qty;
+        row[`${code}_trips`] = tr;
+        total += qty;
+        trips += tr;
+      });
+      row["total"] = total;
+      row["trips"] = trips;
+      return row;
+    });
+    return { materialCodes, rows };
+  }, [logs]);
+
+  const shiftMaterialChart = useMemo(() => {
+    const { materialCodes, rows } = shiftMaterialData;
+    return rows.map((r) => {
+      const row: Record<string, number | string> = { shift: r["shift"] };
+      materialCodes.forEach((code) => {
+        row[code] = Number(r[`${code}_t`] ?? 0);
+      });
+      return row;
+    });
+  }, [shiftMaterialData]);
+
+  const shiftMaterialExportRows = useMemo(() => {
+    return shiftMaterialData.rows.map((r) => {
+      const row: Record<string, string | number> = { Shift: r["shift"] };
+      shiftMaterialData.materialCodes.forEach((code) => {
+        row[`${code}_t`] = Number(r[`${code}_t`] ?? 0);
+        row[`${code}_trips`] = Number(r[`${code}_trips`] ?? 0);
+      });
+      row["Total_t"] = Number(r["total"] ?? 0);
+      row["Total_trips"] = Number(r["trips"] ?? 0);
+      return row;
+    });
+  }, [shiftMaterialData]);
+
+
 
   const crusherRom = useMemo(() => {
     return crushers.map((c) => ({
