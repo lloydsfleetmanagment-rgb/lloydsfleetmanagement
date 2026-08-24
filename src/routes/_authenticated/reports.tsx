@@ -124,9 +124,10 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Operator performance</h2>
-              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-operators-${date}.csv`, byOperator)}>
-                <Download className="mr-2 h-4 w-4" /> Export
+              <Button variant="secondary" onClick={() => exportExcel()}>
+                <Download className="mr-2 h-4 w-4" /> Export Excel
               </Button>
+
             </div>
             <table className="w-full text-sm">
               <thead>
