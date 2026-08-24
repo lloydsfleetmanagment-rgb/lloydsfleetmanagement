@@ -82,30 +82,13 @@ function ProductionPage() {
               onClick={() =>
                 downloadMaterialWorkbook(
                   `fleetiq-production-${date}${shift === "ALL" ? "" : `-shift-${shift}`}.xlsx`,
-                  rows.map((r) => {
-                    const x = r as typeof r & { excavator?: string | null };
-                    return {
-                      Date: date,
-                      Time: fmtTime(r.logged_at),
-                      Shift: r.shift,
-                      Employee: r.employee_name ?? "",
-                      EmployeeID: r.employee_id ?? "",
-                      Equipment: r.equipment_code,
-                      Excavator: x.excavator ?? "",
-                      Material: r.material_code,
-                      Destination: r.destination_code,
-                      Location: locationName(r.destination_code),
-                      "Loading time (min)": r.loading_time_min ?? 0,
-                      "Unloading time (min)": r.unloading_time_min ?? 0,
-                      Trips: r.trips,
-                      Tonnes: Number(r.quantity_t),
-                    };
-                  }),
+                  buildTripRows(rows as never, locationName),
                 )
               }
             >
               Export Excel
             </Button>
+
 
           </>
         }
