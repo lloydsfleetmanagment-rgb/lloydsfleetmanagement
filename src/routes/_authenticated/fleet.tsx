@@ -257,9 +257,17 @@ function FleetPage() {
                     onBlur={(e) => void saveSelected({ operator_employee_id: e.target.value })}
                   />
                 </div>
-                <div className="rounded-xl border border-border bg-secondary/40 p-3 text-sm">
-                  <p className="text-muted-foreground">Cumulative cycles</p>
-                  <p className="font-mono text-lg tabular-nums">{fmtNumber(selected.cycle_count)}</p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl border border-border bg-secondary/40 p-3">
+                    <p className="text-muted-foreground">Cycles today ({shiftDate})</p>
+                    <p className="font-mono text-lg tabular-nums text-primary">
+                      {fmtNumber(tripsToday.get(selected.code)?.trips ?? 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-secondary/40 p-3">
+                    <p className="text-muted-foreground">Lifetime cycles</p>
+                    <p className="font-mono text-lg tabular-nums">{fmtNumber(selected.cycle_count)}</p>
+                  </div>
                 </div>
                 {!canEdit(selected) && (
                   <p className="text-xs text-muted-foreground">
