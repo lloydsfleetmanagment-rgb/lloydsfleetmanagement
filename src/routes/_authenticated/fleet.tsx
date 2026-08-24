@@ -177,8 +177,8 @@ function FleetPage() {
                     <p className="truncate">{shiftLocation.get(e.code) ?? "NA"}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Cycles</p>
-                    <p className="font-mono tabular-nums">{fmtNumber(e.cycle_count)}</p>
+                    <p className="text-muted-foreground">Cycles today</p>
+                    <p className="font-mono tabular-nums">{fmtNumber(t?.trips ?? 0)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Today</p>
@@ -257,9 +257,17 @@ function FleetPage() {
                     onBlur={(e) => void saveSelected({ operator_employee_id: e.target.value })}
                   />
                 </div>
-                <div className="rounded-xl border border-border bg-secondary/40 p-3 text-sm">
-                  <p className="text-muted-foreground">Cumulative cycles</p>
-                  <p className="font-mono text-lg tabular-nums">{fmtNumber(selected.cycle_count)}</p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl border border-border bg-secondary/40 p-3">
+                    <p className="text-muted-foreground">Cycles today ({shiftDate})</p>
+                    <p className="font-mono text-lg tabular-nums text-primary">
+                      {fmtNumber(tripsToday.get(selected.code)?.trips ?? 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-secondary/40 p-3">
+                    <p className="text-muted-foreground">Lifetime cycles</p>
+                    <p className="font-mono text-lg tabular-nums">{fmtNumber(selected.cycle_count)}</p>
+                  </div>
                 </div>
                 {!canEdit(selected) && (
                   <p className="text-xs text-muted-foreground">
