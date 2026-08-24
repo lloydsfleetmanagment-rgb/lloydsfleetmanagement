@@ -504,6 +504,10 @@ function OperatorConsole() {
             <p className="text-sm text-primary">
               {fmtNumber(quantity)} t {t("op.quantity").toLowerCase()}
             </p>
+            <p className="text-xs text-muted-foreground">
+              Trip #{nextTripNumber} of shift {shift} · {shiftTripsSoFar} done so far (continues across vehicles)
+            </p>
+
           </div>
 
           {/* Remarks stay optional and out of the way. */}
