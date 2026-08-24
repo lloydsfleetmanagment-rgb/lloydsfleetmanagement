@@ -177,8 +177,8 @@ function FleetPage() {
                     <p className="truncate">{shiftLocation.get(e.code) ?? "NA"}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Cycles</p>
-                    <p className="font-mono tabular-nums">{fmtNumber(e.cycle_count)}</p>
+                    <p className="text-muted-foreground">Cycles today</p>
+                    <p className="font-mono tabular-nums">{fmtNumber(t?.trips ?? 0)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Today</p>
