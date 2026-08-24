@@ -40,12 +40,25 @@ export const TONNES_PER_TRIP: Record<string, number> = {
   SANY: 70,
 };
 
+/** SHALE is lighter: a dumper trip is 90 t and a SANY trip is 65 t. */
+export const SHALE_TONNES_PER_TRIP: Record<string, number> = {
+  DUMPER: 90,
+  SANY: 65,
+};
+
 export const EMERGENCY_NOTIFY_EMAIL = "sweja06@gmail.com";
 export const EMERGENCY_CALL_NUMBER = "+91 93460 54190";
 
-export function tonnesFor(equipmentType: string | null | undefined, trips: number) {
-  return (TONNES_PER_TRIP[equipmentType ?? ""] ?? 0) * (Number.isFinite(trips) ? trips : 0);
+export function tonnesPerTrip(equipmentType: string | null | undefined, materialCode?: string | null) {
+  const type = equipmentType ?? "";
+  if ((materialCode ?? "").toUpperCase() === "SHALE") return SHALE_TONNES_PER_TRIP[type] ?? 0;
+  return TONNES_PER_TRIP[type] ?? 0;
 }
+
+export function tonnesFor(equipmentType: string | null | undefined, trips: number, materialCode?: string | null) {
+  return tonnesPerTrip(equipmentType, materialCode) * (Number.isFinite(trips) ? trips : 0);
+}
+
 
 export function fmtNumber(value: number, digits = 0) {
   return new Intl.NumberFormat("en-IN", {

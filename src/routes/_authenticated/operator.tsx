@@ -173,7 +173,16 @@ function OperatorConsole() {
     if (equipmentBlocked) setInvalidOpen(true);
   }, [equipmentBlocked]);
 
-  const quantity = tonnesFor(selectedEquipment?.equipment_type, Number(trips));
+  const quantity = tonnesFor(selectedEquipment?.equipment_type, Number(trips), material);
+
+  // Trips follow the operator, not the vehicle: a breakdown swap to another
+  // dumper/SANY keeps the same running count for this shift and employee.
+  const shiftTripsSoFar = useMemo(
+    () => myLogs.filter((l) => l.shift === shift).reduce((s, l) => s + l.trips, 0),
+    [myLogs, shift],
+  );
+  const nextTripNumber = shiftTripsSoFar + 1;
+
 
   const pickDestination = (code: string) => {
     beginEntry();
@@ -495,6 +504,10 @@ function OperatorConsole() {
             <p className="text-sm text-primary">
               {fmtNumber(quantity)} t {t("op.quantity").toLowerCase()}
             </p>
+            <p className="text-xs text-muted-foreground">
+              Trip #{nextTripNumber} of shift {shift} · {shiftTripsSoFar} done so far (continues across vehicles)
+            </p>
+
           </div>
 
           {/* Remarks stay optional and out of the way. */}
