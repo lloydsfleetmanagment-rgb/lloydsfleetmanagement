@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { KpiCard, LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { useDestinations, useOperatorLogs } from "@/lib/queries";
 import { fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
-import { downloadMaterialWorkbook } from "@/lib/excel";
+import { buildTripRows, downloadMaterialWorkbook } from "@/lib/excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
