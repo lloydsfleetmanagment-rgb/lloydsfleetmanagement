@@ -74,7 +74,6 @@ function OperatorConsole() {
   const [material, setMaterial] = useState("");
   const [excavator, setExcavator] = useState("");
   const [destination, setDestination] = useState("");
-  const [trips, setTrips] = useState("");
   const [remarks, setRemarks] = useState("");
   const empId = profile?.employee_id ?? "";
   const empName = profile?.employee_name ?? "";
@@ -173,7 +172,9 @@ function OperatorConsole() {
     if (equipmentBlocked) setInvalidOpen(true);
   }, [equipmentBlocked]);
 
-  const quantity = tonnesFor(selectedEquipment?.equipment_type, Number(trips), material);
+  // Each saved entry is exactly one trip; tonnage follows material + equipment type.
+  const TRIPS_PER_ENTRY = 1;
+  const quantity = tonnesFor(selectedEquipment?.equipment_type, TRIPS_PER_ENTRY, material);
 
   // Trips follow the operator, not the vehicle: a breakdown swap to another
   // dumper/SANY keeps the same running count for this shift and employee.
@@ -201,7 +202,6 @@ function OperatorConsole() {
       setEquipmentId(d['equipmentId'] ?? "");
       setMaterial(d['material'] ?? "");
       setExcavator(d['excavator'] ?? "");
-      setTrips(d['trips'] ?? "");
       setRemarks(d['remarks'] ?? "");
     } catch {
       /* ignore malformed draft */
@@ -210,13 +210,12 @@ function OperatorConsole() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, excavator, trips, remarks }));
+      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, excavator, remarks }));
     }, 600);
     return () => clearTimeout(timer);
-  }, [equipmentId, material, excavator, trips, remarks]);
+  }, [equipmentId, material, excavator, remarks]);
 
   const reset = () => {
-    setTrips("");
     setExcavator("");
     setRemarks("");
     setDestination("");
@@ -227,7 +226,7 @@ function OperatorConsole() {
   };
 
   const save = async () => {
-    if (!selectedEquipment || !material || !excavator || !destination || !trips) {
+    if (!selectedEquipment || !material || !excavator || !destination) {
       toast.error(t("op.completeFields"));
       return;
     }
@@ -259,7 +258,7 @@ function OperatorConsole() {
       material_code: material,
       excavator,
       destination_code: destination,
-      trips: Number(trips),
+      trips: TRIPS_PER_ENTRY,
       loading_time_min: liveLoading,
       unloading_time_min: liveUnloading,
       remarks: remarks || null,
@@ -299,7 +298,7 @@ function OperatorConsole() {
       user_id: user?.id ?? null,
       employee_id: profile?.employee_id ?? null,
       employee_name: profile?.employee_name ?? null,
-      details: { equipment: selectedEquipment.code, material, excavator, destination, trips: Number(trips), quantity_t: quantity },
+      details: { equipment: selectedEquipment.code, material, excavator, destination, trips: TRIPS_PER_ENTRY, quantity_t: quantity },
     });
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1800);
