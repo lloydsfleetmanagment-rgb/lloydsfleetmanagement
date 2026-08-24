@@ -42,10 +42,17 @@ function DashboardPage() {
     const rom = logs.filter((l) => l.material_code === "ROM").reduce((s, l) => s + Number(l.quantity_t), 0);
     const bhq = logs.filter((l) => l.material_code === "BHQ").reduce((s, l) => s + Number(l.quantity_t), 0);
     const shale = logs.filter((l) => l.material_code === "SHALE").reduce((s, l) => s + Number(l.quantity_t), 0);
-    const active = equipment.filter((e) => e.status === "ACTIVE").length;
+    // Active = trucks that actually logged a trip today (resets automatically each day).
+    const active = new Set(logs.map((l) => l.equipment_id).filter(Boolean)).size;
     const trips = logs.reduce((s, l) => s + l.trips, 0);
     return { total, rom, bhq, shale, active, trips };
-  }, [logs, equipment]);
+  }, [logs]);
+
+  const lastUpdated = new Date(dataUpdatedAt || Date.now()).toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const hourly = useMemo(() => {
     const rows = Array.from({ length: 24 }, (_, h) => ({ hour: `${String(h).padStart(2, "0")}:00`, ROM: 0, BHQ: 0, SHALE: 0, trips: 0 }));
