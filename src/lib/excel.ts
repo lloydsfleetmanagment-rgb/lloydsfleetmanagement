@@ -67,7 +67,19 @@ export function downloadMaterialWorkbook(
 ) {
   const wb = XLSX.utils.book_new();
 
-  const addSheet = (name: string, data: ExportRow[]) => {
+  const withTotals = (data: ExportRow[]): ExportRow[] => {
+    if (!data.length || !("Trips" in data[0]!)) return data;
+    const total: ExportRow = { "S.No": "", Date: "", Time: "", Shift: "TOTAL" };
+    Object.keys(data[0]!).forEach((h) => {
+      if (h === "Trips" || h === "Tonnes (t)" || h === "Quantity (t)") {
+        total[h] = data.reduce((s, r) => s + Number(r[h] ?? 0), 0);
+      } else if (!(h in total)) total[h] = "";
+    });
+    return [...data, total];
+  };
+
+  const addSheet = (name: string, rowsIn: ExportRow[]) => {
+    const data = withTotals(rowsIn);
     const ws = XLSX.utils.json_to_sheet(data);
     const headers = Object.keys(data[0] ?? { Info: "" });
     ws["!cols"] = headers.map((h) => ({
@@ -79,6 +91,7 @@ export function downloadMaterialWorkbook(
     delete (ws as { "!autofilter"?: unknown })["!autofilter"];
     XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
   };
+
 
   addSheet("All Materials", rows.length ? rows : [{ Info: "No entries" }]);
 
