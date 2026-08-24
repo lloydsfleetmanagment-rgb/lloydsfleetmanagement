@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Layers, Truck } from "lucide-react";
+import { Activity, Download, Layers, Truck } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { KpiCard, LoadingBlock, Panel, Progress3D, SectionHeader } from "@/components/fleetiq/Cards";
 import { MineMap } from "@/components/fleetiq/MineMap";
@@ -9,6 +9,7 @@ import { downloadCsv, fmtNumber } from "@/lib/fleetiq";
 import { useShiftClock } from "@/lib/useShiftClock";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
