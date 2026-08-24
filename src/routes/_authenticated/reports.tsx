@@ -4,8 +4,7 @@ import { Download } from "lucide-react";
 import { LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { useAuditLogs, useOperatorLogs } from "@/lib/queries";
 import { useAuth } from "@/hooks/useAuth";
-import { fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
-import { downloadMaterialWorkbook, type ExportRow } from "@/lib/excel";
+import { downloadCsv, fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,33 +53,6 @@ function ReportsPage() {
     return Array.from(m, ([id, v]) => ({ id, ...v })).sort((a, b) => b.tonnes - a.tonnes);
   }, [logs]);
 
-  /** Trip-level rows, oldest first, used for the material-wise Excel export. */
-  const detailRows = useMemo<ExportRow[]>(
-    () =>
-      [...logs]
-        .sort((a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime())
-        .map((l) => ({
-          Date: l.log_date,
-          Shift: l.shift,
-          Time: fmtTime(l.logged_at),
-          "Employee ID": l.employee_id ?? "",
-          "Employee Name": l.employee_name ?? "",
-          Equipment: l.equipment_code,
-          "Equipment Type": l.equipment_type,
-          Excavator: (l as { excavator?: string | null }).excavator ?? "",
-          "Dig Face": l.dig_face ?? "",
-          Material: l.material_code,
-          Destination: l.destination_code,
-          Trips: l.trips,
-          "Quantity (t)": Number(l.quantity_t),
-          Remarks: l.remarks ?? "",
-        })),
-    [logs],
-  );
-
-  const exportExcel = () => downloadMaterialWorkbook(`fleetiq-report-${date}.xlsx`, detailRows);
-
-
   return (
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
@@ -105,7 +77,7 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Equipment performance</h2>
-              <Button variant="secondary" onClick={exportExcel}>
+              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-equipment-${date}.csv`, byEquipment)}>
                 <Download className="mr-2 h-4 w-4" /> Export
               </Button>
             </div>
@@ -146,7 +118,7 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Operator performance</h2>
-              <Button variant="secondary" onClick={exportExcel}>
+              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-operators-${date}.csv`, byOperator)}>
                 <Download className="mr-2 h-4 w-4" /> Export
               </Button>
             </div>
