@@ -17,6 +17,8 @@ export function useShiftClock() {
   }));
 
   useEffect(() => {
+    let boundaryTimer = 0;
+
     const tick = () => {
       const date = todayISO();
       const shift = currentShift();
@@ -26,11 +28,34 @@ export function useShiftClock() {
         return { date, shift };
       });
     };
+
+    /** Milliseconds until the next shift boundary (06:00 / 14:00 / 22:00 IST). */
+    const msToNextShiftEnd = () => {
+      const now = new Date();
+      const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      const mins = ist.getHours() * 60 + ist.getMinutes();
+      const boundaries = [6 * 60, 14 * 60, 22 * 60, 30 * 60];
+      const next = boundaries.find((b) => b > mins)!;
+      const msIntoMinute = ist.getSeconds() * 1000 + ist.getMilliseconds();
+      return (next - mins) * 60_000 - msIntoMinute + 1_000;
+    };
+
+    const scheduleBoundary = () => {
+      boundaryTimer = window.setTimeout(() => {
+        // Shift just ended — force every live query to refetch for the new window.
+        void qc.invalidateQueries();
+        tick();
+        scheduleBoundary();
+      }, msToNextShiftEnd());
+    };
+
+    scheduleBoundary();
     const id = window.setInterval(tick, 30_000);
     const onFocus = () => tick();
     window.addEventListener("focus", onFocus);
     return () => {
       window.clearInterval(id);
+      window.clearTimeout(boundaryTimer);
       window.removeEventListener("focus", onFocus);
     };
   }, [qc]);
