@@ -322,7 +322,6 @@ function OperatorConsole() {
     { n: 2, label: t("op.excavator"), done: !!excavator },
     { n: 3, label: t("op.material"), done: !!material },
     { n: 4, label: t("op.destination"), done: !!destination },
-    { n: 5, label: t("op.trips"), done: !!trips && Number(trips) > 0 },
   ];
   const doneCount = steps.filter((s) => s.done).length;
 
