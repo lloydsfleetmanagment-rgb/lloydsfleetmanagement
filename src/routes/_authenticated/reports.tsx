@@ -4,7 +4,8 @@ import { Download } from "lucide-react";
 import { LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { useAuditLogs, useOperatorLogs } from "@/lib/queries";
 import { useAuth } from "@/hooks/useAuth";
-import { downloadCsv, fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
+import { fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
+import { buildTripRows, downloadMaterialWorkbook } from "@/lib/excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +54,10 @@ function ReportsPage() {
     return Array.from(m, ([id, v]) => ({ id, ...v })).sort((a, b) => b.tonnes - a.tonnes);
   }, [logs]);
 
+  const exportExcel = () =>
+    downloadMaterialWorkbook(`fleetiq-trips-${date}.xlsx`, buildTripRows(logs as never));
+
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
@@ -77,10 +82,11 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Equipment performance</h2>
-              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-equipment-${date}.csv`, byEquipment)}>
-                <Download className="mr-2 h-4 w-4" /> Export
+              <Button variant="secondary" onClick={() => exportExcel()}>
+                <Download className="mr-2 h-4 w-4" /> Export Excel
               </Button>
             </div>
+
             {isLoading ? (
               <LoadingBlock rows={5} />
             ) : (
@@ -118,9 +124,10 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Operator performance</h2>
-              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-operators-${date}.csv`, byOperator)}>
-                <Download className="mr-2 h-4 w-4" /> Export
+              <Button variant="secondary" onClick={() => exportExcel()}>
+                <Download className="mr-2 h-4 w-4" /> Export Excel
               </Button>
+
             </div>
             <table className="w-full text-sm">
               <thead>
