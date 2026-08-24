@@ -74,7 +74,6 @@ function OperatorConsole() {
   const [material, setMaterial] = useState("");
   const [excavator, setExcavator] = useState("");
   const [destination, setDestination] = useState("");
-  const [trips, setTrips] = useState("");
   const [remarks, setRemarks] = useState("");
   const empId = profile?.employee_id ?? "";
   const empName = profile?.employee_name ?? "";
@@ -173,7 +172,9 @@ function OperatorConsole() {
     if (equipmentBlocked) setInvalidOpen(true);
   }, [equipmentBlocked]);
 
-  const quantity = tonnesFor(selectedEquipment?.equipment_type, Number(trips), material);
+  // Each saved entry is exactly one trip; tonnage follows material + equipment type.
+  const TRIPS_PER_ENTRY = 1;
+  const quantity = tonnesFor(selectedEquipment?.equipment_type, TRIPS_PER_ENTRY, material);
 
   // Trips follow the operator, not the vehicle: a breakdown swap to another
   // dumper/SANY keeps the same running count for this shift and employee.
@@ -201,7 +202,6 @@ function OperatorConsole() {
       setEquipmentId(d['equipmentId'] ?? "");
       setMaterial(d['material'] ?? "");
       setExcavator(d['excavator'] ?? "");
-      setTrips(d['trips'] ?? "");
       setRemarks(d['remarks'] ?? "");
     } catch {
       /* ignore malformed draft */
@@ -210,13 +210,12 @@ function OperatorConsole() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, excavator, trips, remarks }));
+      window.localStorage.setItem("fleetiq:draft", JSON.stringify({ equipmentId, material, excavator, remarks }));
     }, 600);
     return () => clearTimeout(timer);
-  }, [equipmentId, material, excavator, trips, remarks]);
+  }, [equipmentId, material, excavator, remarks]);
 
   const reset = () => {
-    setTrips("");
     setExcavator("");
     setRemarks("");
     setDestination("");
@@ -227,7 +226,7 @@ function OperatorConsole() {
   };
 
   const save = async () => {
-    if (!selectedEquipment || !material || !excavator || !destination || !trips) {
+    if (!selectedEquipment || !material || !excavator || !destination) {
       toast.error(t("op.completeFields"));
       return;
     }
@@ -259,7 +258,7 @@ function OperatorConsole() {
       material_code: material,
       excavator,
       destination_code: destination,
-      trips: Number(trips),
+      trips: TRIPS_PER_ENTRY,
       loading_time_min: liveLoading,
       unloading_time_min: liveUnloading,
       remarks: remarks || null,
@@ -299,7 +298,7 @@ function OperatorConsole() {
       user_id: user?.id ?? null,
       employee_id: profile?.employee_id ?? null,
       employee_name: profile?.employee_name ?? null,
-      details: { equipment: selectedEquipment.code, material, excavator, destination, trips: Number(trips), quantity_t: quantity },
+      details: { equipment: selectedEquipment.code, material, excavator, destination, trips: TRIPS_PER_ENTRY, quantity_t: quantity },
     });
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1800);
@@ -322,7 +321,6 @@ function OperatorConsole() {
     { n: 2, label: t("op.excavator"), done: !!excavator },
     { n: 3, label: t("op.material"), done: !!material },
     { n: 4, label: t("op.destination"), done: !!destination },
-    { n: 5, label: t("op.trips"), done: !!trips && Number(trips) > 0 },
   ];
   const doneCount = steps.filter((s) => s.done).length;
 
@@ -463,52 +461,15 @@ function OperatorConsole() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-base">5 · {t("op.trips")}</Label>
-            <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-14 w-14 text-2xl"
-                onClick={() => {
-                  beginEntry();
-                  setTrips(String(Math.max(0, Number(trips || 0) - 1)));
-                }}
-              >
-                −
-              </Button>
-              <Input
-                type="number"
-                min={0}
-                inputMode="numeric"
-                value={trips}
-                onChange={(e) => {
-                  beginEntry();
-                  setTrips(e.target.value);
-                }}
-                placeholder="0"
-                className="h-14 flex-1 text-center font-mono text-2xl tabular-nums"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-14 w-14 text-2xl"
-                onClick={() => {
-                  beginEntry();
-                  setTrips(String(Number(trips || 0) + 1));
-                }}
-              >
-                +
-              </Button>
-            </div>
+          <div className="rounded-xl border border-border bg-secondary/40 p-4">
             <p className="text-sm text-primary">
               {fmtNumber(quantity)} t {t("op.quantity").toLowerCase()}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Trip #{nextTripNumber} of shift {shift} · {shiftTripsSoFar} done so far (continues across vehicles)
             </p>
-
           </div>
+
 
           {/* Remarks stay optional and out of the way. */}
           <div className="space-y-2">
