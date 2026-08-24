@@ -32,7 +32,7 @@ function hourKey(iso: string) {
 
 function DashboardPage() {
   const { date, shift } = useShiftClock();
-  const { data: logs = [], isLoading } = useTodayLogs(date);
+  const { data: logs = [], isLoading, dataUpdatedAt } = useTodayLogs(date);
   const { data: equipment = [] } = useEquipment();
   const { data: crushers = [] } = useCrushers();
   const [shiftFilter, setShiftFilter] = useState<"ALL" | "A" | "B" | "C">("ALL");
