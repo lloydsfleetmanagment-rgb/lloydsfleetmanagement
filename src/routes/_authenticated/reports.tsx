@@ -77,10 +77,11 @@ function ReportsPage() {
           <Panel className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Equipment performance</h2>
-              <Button variant="secondary" onClick={() => downloadCsv(`fleetiq-equipment-${date}.csv`, byEquipment)}>
-                <Download className="mr-2 h-4 w-4" /> Export
+              <Button variant="secondary" onClick={() => exportExcel()}>
+                <Download className="mr-2 h-4 w-4" /> Export Excel
               </Button>
             </div>
+
             {isLoading ? (
               <LoadingBlock rows={5} />
             ) : (
