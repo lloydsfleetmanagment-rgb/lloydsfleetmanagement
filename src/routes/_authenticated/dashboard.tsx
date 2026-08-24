@@ -99,8 +99,8 @@ function DashboardPage() {
         total += qty;
         trips += tr;
       });
-      row.total = total;
-      row.trips = trips;
+      row["total"] = total;
+      row["trips"] = trips;
       return row;
     });
     return { materialCodes, rows };
@@ -109,7 +109,7 @@ function DashboardPage() {
   const shiftMaterialChart = useMemo(() => {
     const { materialCodes, rows } = shiftMaterialData;
     return rows.map((r) => {
-      const row: Record<string, number | string> = { shift: r.shift };
+      const row: Record<string, number | string> = { shift: r["shift"] };
       materialCodes.forEach((code) => {
         row[code] = Number(r[`${code}_t`] ?? 0);
       });
@@ -119,16 +119,17 @@ function DashboardPage() {
 
   const shiftMaterialExportRows = useMemo(() => {
     return shiftMaterialData.rows.map((r) => {
-      const row: Record<string, string | number> = { Shift: r.shift };
+      const row: Record<string, string | number> = { Shift: r["shift"] };
       shiftMaterialData.materialCodes.forEach((code) => {
         row[`${code}_t`] = Number(r[`${code}_t`] ?? 0);
         row[`${code}_trips`] = Number(r[`${code}_trips`] ?? 0);
       });
-      row["Total_t"] = Number(r.total ?? 0);
-      row["Total_trips"] = Number(r.trips ?? 0);
+      row["Total_t"] = Number(r["total"] ?? 0);
+      row["Total_trips"] = Number(r["trips"] ?? 0);
       return row;
     });
   }, [shiftMaterialData]);
+
 
 
   const crusherRom = useMemo(() => {
