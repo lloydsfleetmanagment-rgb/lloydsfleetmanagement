@@ -463,52 +463,15 @@ function OperatorConsole() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-base">5 · {t("op.trips")}</Label>
-            <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-14 w-14 text-2xl"
-                onClick={() => {
-                  beginEntry();
-                  setTrips(String(Math.max(0, Number(trips || 0) - 1)));
-                }}
-              >
-                −
-              </Button>
-              <Input
-                type="number"
-                min={0}
-                inputMode="numeric"
-                value={trips}
-                onChange={(e) => {
-                  beginEntry();
-                  setTrips(e.target.value);
-                }}
-                placeholder="0"
-                className="h-14 flex-1 text-center font-mono text-2xl tabular-nums"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-14 w-14 text-2xl"
-                onClick={() => {
-                  beginEntry();
-                  setTrips(String(Number(trips || 0) + 1));
-                }}
-              >
-                +
-              </Button>
-            </div>
+          <div className="rounded-xl border border-border bg-secondary/40 p-4">
             <p className="text-sm text-primary">
               {fmtNumber(quantity)} t {t("op.quantity").toLowerCase()}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Trip #{nextTripNumber} of shift {shift} · {shiftTripsSoFar} done so far (continues across vehicles)
             </p>
-
           </div>
+
 
           {/* Remarks stay optional and out of the way. */}
           <div className="space-y-2">
