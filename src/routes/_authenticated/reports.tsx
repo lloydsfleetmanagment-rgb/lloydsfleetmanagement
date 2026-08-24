@@ -4,7 +4,7 @@ import { Download } from "lucide-react";
 import { LoadingBlock, Panel, SectionHeader } from "@/components/fleetiq/Cards";
 import { useAuditLogs, useOperatorLogs } from "@/lib/queries";
 import { useAuth } from "@/hooks/useAuth";
-import { downloadCsv, fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
+import { fmtNumber, fmtTime, todayISO } from "@/lib/fleetiq";
 import { buildTripRows, downloadMaterialWorkbook } from "@/lib/excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
