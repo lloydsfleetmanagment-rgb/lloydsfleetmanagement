@@ -53,6 +53,10 @@ function ReportsPage() {
     return Array.from(m, ([id, v]) => ({ id, ...v })).sort((a, b) => b.tonnes - a.tonnes);
   }, [logs]);
 
+  const exportExcel = () =>
+    downloadMaterialWorkbook(`fleetiq-trips-${date}.xlsx`, buildTripRows(logs as never));
+
+
   return (
     <div className="mx-auto max-w-[1500px]">
       <SectionHeader
