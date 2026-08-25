@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftClock } from "@/lib/useShiftClock";
 import { useOfflineSync } from "@/lib/useOfflineSync";
-import { enqueueLog } from "@/lib/offlineQueue";
+import { enqueueLog, newClientId } from "@/lib/offlineQueue";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
