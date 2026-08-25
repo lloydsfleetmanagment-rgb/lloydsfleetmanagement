@@ -431,6 +431,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "फाइन्स",
     screens: "स्क्रीन",
     plant: "प्लांट",
+    screening: "स्क्रीनिंग",
   },
   te: {
     top: "పైభాగం",
@@ -448,6 +449,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "ఫైన్స్",
     screens: "స్క్రీన్స్",
     plant: "ప్లాంట్",
+    screening: "స్క్రీనింగ్",
   },
   mr: {
     top: "वरचा",
@@ -465,6 +467,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "फाइन्स",
     screens: "स्क्रीन",
     plant: "प्लांट",
+    screening: "स्क्रीनिंग",
   },
   or: {
     top: "ଉପର",
@@ -482,6 +485,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "ଫାଇନ୍ସ",
     screens: "ସ୍କ୍ରିନ୍",
     plant: "ପ୍ଲାଣ୍ଟ",
+    screening: "ସ୍କ୍ରିନିଂ",
   },
 };
 
