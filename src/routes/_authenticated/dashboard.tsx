@@ -109,7 +109,7 @@ function DashboardPage() {
   const shiftMaterialChart = useMemo(() => {
     const { materialCodes, rows } = shiftMaterialData;
     return rows.map((r) => {
-      const row: Record<string, number | string> = { shift: r["shift"] };
+      const row: Record<string, number | string> = { shift: String(r["shift"] ?? "") };
       materialCodes.forEach((code) => {
         row[code] = Number(r[`${code}_t`] ?? 0);
       });
