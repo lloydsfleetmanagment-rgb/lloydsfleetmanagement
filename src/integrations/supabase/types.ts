@@ -296,6 +296,7 @@ export type Database = {
       }
       operator_logs: {
         Row: {
+          client_id: string | null
           created_at: string
           destination_code: string
           dig_face: string | null
@@ -319,6 +320,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           destination_code: string
           dig_face?: string | null
@@ -342,6 +344,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           destination_code?: string
           dig_face?: string | null
