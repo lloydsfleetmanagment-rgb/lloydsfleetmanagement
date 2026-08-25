@@ -262,11 +262,13 @@ function OperatorConsole() {
       loading_time_min: liveLoading,
       unloading_time_min: liveUnloading,
       remarks: remarks || null,
+      // Unique per entry: guarantees an offline entry can never be saved twice.
+      client_id: newClientId(),
     };
 
     // No network in the pit: keep the entry locally and push it automatically later.
     if (!navigator.onLine) {
-      const queued = enqueueLog(payload);
+      const queued = await enqueueLog(payload);
       setSaving(false);
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1800);
@@ -283,8 +285,8 @@ function OperatorConsole() {
         toast.error(error.message);
         return;
       }
-      if (/fetch|network/i.test(error.message)) {
-        const queued = enqueueLog(payload);
+      if (/fetch|network|failed/i.test(error.message)) {
+        const queued = await enqueueLog(payload);
         toast.success(`Saved offline · ${queued} entr${queued === 1 ? "y" : "ies"} waiting to sync`);
         reset();
         return;
