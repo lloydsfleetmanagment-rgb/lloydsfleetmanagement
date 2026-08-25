@@ -301,7 +301,8 @@ const or_: Dict = {
  *  the vehicle-assignment strings. Kept separate so every dictionary stays in sync. */
 const EXTRAS: Record<LangCode, Dict> = {
   en: {
-    "mat.ROM": "ROM (raw ore)",
+    "mat.ROM": "ROM",
+    "mat.R-ROM": "Rehandling ROM (R-ROM)",
     "mat.BHQ": "BHQ",
     "mat.SHALE": "Shale",
     "mat.FINES": "Fines",
@@ -320,7 +321,8 @@ const EXTRAS: Record<LangCode, Dict> = {
     "op.vehicleTaken": "That vehicle is already assigned to another operator",
   },
   hi: {
-    "mat.ROM": "ROM (कच्चा अयस्क)",
+    "mat.ROM": "ROM",
+    "mat.R-ROM": "री-हैंडलिंग ROM (R-ROM)",
     "mat.BHQ": "BHQ",
     "mat.SHALE": "शेल",
     "mat.FINES": "फाइन्स",
@@ -339,7 +341,8 @@ const EXTRAS: Record<LangCode, Dict> = {
     "op.vehicleTaken": "यह वाहन पहले से किसी अन्य ऑपरेटर को सौंपा गया है",
   },
   te: {
-    "mat.ROM": "ROM (ముడి ఖనిజం)",
+    "mat.ROM": "ROM",
+    "mat.R-ROM": "రీహ్యాండ్లింగ్ ROM (R-ROM)",
     "mat.BHQ": "BHQ",
     "mat.SHALE": "షేల్",
     "mat.FINES": "ఫైన్స్",
@@ -358,7 +361,8 @@ const EXTRAS: Record<LangCode, Dict> = {
     "op.vehicleTaken": "ఆ వాహనం ఇప్పటికే మరో ఆపరేటర్‌కు కేటాయించబడింది",
   },
   mr: {
-    "mat.ROM": "ROM (कच्चे खनिज)",
+    "mat.ROM": "ROM",
+    "mat.R-ROM": "री-हँडलिंग ROM (R-ROM)",
     "mat.BHQ": "BHQ",
     "mat.SHALE": "शेल",
     "mat.FINES": "फाइन्स",
@@ -377,7 +381,8 @@ const EXTRAS: Record<LangCode, Dict> = {
     "op.vehicleTaken": "हे वाहन आधीच दुसऱ्या ऑपरेटरला दिले आहे",
   },
   or: {
-    "mat.ROM": "ROM (କଞ୍ଚା ଖଣିଜ)",
+    "mat.ROM": "ROM",
+    "mat.R-ROM": "ରିହ୍ୟାଣ୍ଡଲିଂ ROM (R-ROM)",
     "mat.BHQ": "BHQ",
     "mat.SHALE": "ଶେଲ୍",
     "mat.FINES": "ଫାଇନ୍ସ",
@@ -426,6 +431,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "फाइन्स",
     screens: "स्क्रीन",
     plant: "प्लांट",
+    screening: "स्क्रीनिंग",
   },
   te: {
     top: "పైభాగం",
@@ -443,6 +449,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "ఫైన్స్",
     screens: "స్క్రీన్స్",
     plant: "ప్లాంట్",
+    screening: "స్క్రీనింగ్",
   },
   mr: {
     top: "वरचा",
@@ -460,6 +467,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "फाइन्स",
     screens: "स्क्रीन",
     plant: "प्लांट",
+    screening: "स्क्रीनिंग",
   },
   or: {
     top: "ଉପର",
@@ -477,6 +485,7 @@ const TERMS: Record<LangCode, Record<string, string>> = {
     fines: "ଫାଇନ୍ସ",
     screens: "ସ୍କ୍ରିନ୍",
     plant: "ପ୍ଲାଣ୍ଟ",
+    screening: "ସ୍କ୍ରିନିଂ",
   },
 };
 

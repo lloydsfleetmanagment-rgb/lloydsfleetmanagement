@@ -11,21 +11,33 @@ export function useOfflineSync() {
   const qc = useQueryClient();
   const [pending, setPending] = useState(0);
   const [online, setOnline] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+
+  const refreshCount = useCallback(async () => {
+    setPending(await queueCount());
+  }, []);
 
   const sync = useCallback(async () => {
-    const synced = await flushQueue();
-    setPending(queueCount());
-    if (synced > 0) {
-      toast.success(`${synced} offline ${synced === 1 ? "entry" : "entries"} synced`);
-      void qc.invalidateQueries();
+    setSyncing(true);
+    try {
+      const synced = await flushQueue();
+      await refreshCount();
+      if (synced > 0) {
+        setLastSyncedAt(new Date());
+        toast.success(`${synced} offline ${synced === 1 ? "entry" : "entries"} synced`);
+        void qc.invalidateQueries();
+      }
+    } finally {
+      setSyncing(false);
     }
-  }, [qc]);
+  }, [qc, refreshCount]);
 
   useEffect(() => {
     setOnline(navigator.onLine);
-    setPending(queueCount());
+    void refreshCount();
 
-    const onQueue = () => setPending(queueCount());
+    const onQueue = () => void refreshCount();
     const onOnline = () => {
       setOnline(true);
       void sync();
@@ -47,7 +59,7 @@ export function useOfflineSync() {
       window.removeEventListener("offline", onOffline);
       window.clearInterval(id);
     };
-  }, [sync]);
+  }, [sync, refreshCount]);
 
-  return { pending, online, sync };
+  return { pending, online, syncing, lastSyncedAt, sync };
 }

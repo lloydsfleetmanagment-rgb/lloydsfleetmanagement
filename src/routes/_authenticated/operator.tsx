@@ -6,12 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftClock } from "@/lib/useShiftClock";
 import { useOfflineSync } from "@/lib/useOfflineSync";
-import { enqueueLog } from "@/lib/offlineQueue";
+import { enqueueLog, newClientId } from "@/lib/offlineQueue";
 import { useDestinations, useEquipment, useMaterials, useOperatorLogs, writeAudit } from "@/lib/queries";
 import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EXCAVATOR_GROUPS,
   fmtNumber,
+  fmtTime,
   todayISO,
   tonnesFor,
 } from "@/lib/fleetiq";
@@ -60,7 +61,7 @@ function OperatorConsole() {
   const { t, tn, lang, setLang } = useI18n();
   const qc = useQueryClient();
   const { shift } = useShiftClock();
-  const { pending, online } = useOfflineSync();
+  const { pending, online, syncing, lastSyncedAt } = useOfflineSync();
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
@@ -262,11 +263,13 @@ function OperatorConsole() {
       loading_time_min: liveLoading,
       unloading_time_min: liveUnloading,
       remarks: remarks || null,
+      // Unique per entry: guarantees an offline entry can never be saved twice.
+      client_id: newClientId(),
     };
 
     // No network in the pit: keep the entry locally and push it automatically later.
     if (!navigator.onLine) {
-      const queued = enqueueLog(payload);
+      const queued = await enqueueLog(payload);
       setSaving(false);
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1800);
@@ -283,8 +286,8 @@ function OperatorConsole() {
         toast.error(error.message);
         return;
       }
-      if (/fetch|network/i.test(error.message)) {
-        const queued = enqueueLog(payload);
+      if (/fetch|network|failed/i.test(error.message)) {
+        const queued = await enqueueLog(payload);
         toast.success(`Saved offline · ${queued} entr${queued === 1 ? "y" : "ies"} waiting to sync`);
         reset();
         return;
@@ -336,10 +339,11 @@ function OperatorConsole() {
         </div>
         <div className="flex items-center gap-2">
           <span
+            title={lastSyncedAt ? `Last sync ${fmtTime(lastSyncedAt.toISOString())}` : undefined}
             className={`rounded-full border px-3 py-1 text-xs ${online ? "border-primary/40 text-primary" : "border-destructive/50 text-destructive"}`}
           >
             {online ? "Online" : "Offline"}
-            {pending > 0 ? ` · ${pending}` : ""}
+            {syncing ? " · Syncing…" : pending > 0 ? ` · ${pending} pending` : online ? " · Synced" : ""}
           </span>
           <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
             <SelectTrigger className="h-11 w-[160px] text-base">
