@@ -12,6 +12,7 @@ import { LANGUAGES, useI18n, type LangCode } from "@/lib/i18n";
 import {
   EXCAVATOR_GROUPS,
   fmtNumber,
+  fmtTime,
   todayISO,
   tonnesFor,
 } from "@/lib/fleetiq";
@@ -60,7 +61,7 @@ function OperatorConsole() {
   const { t, tn, lang, setLang } = useI18n();
   const qc = useQueryClient();
   const { shift } = useShiftClock();
-  const { pending, online } = useOfflineSync();
+  const { pending, online, syncing, lastSyncedAt } = useOfflineSync();
   const { data: equipment = [] } = useEquipment();
   const { data: materials = [] } = useMaterials();
   const { data: destinations = [] } = useDestinations();
