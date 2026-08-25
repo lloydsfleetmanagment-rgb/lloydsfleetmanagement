@@ -338,10 +338,11 @@ function OperatorConsole() {
         </div>
         <div className="flex items-center gap-2">
           <span
+            title={lastSyncedAt ? `Last sync ${fmtTime(lastSyncedAt.toISOString())}` : undefined}
             className={`rounded-full border px-3 py-1 text-xs ${online ? "border-primary/40 text-primary" : "border-destructive/50 text-destructive"}`}
           >
             {online ? "Online" : "Offline"}
-            {pending > 0 ? ` · ${pending}` : ""}
+            {syncing ? " · Syncing…" : pending > 0 ? ` · ${pending} pending` : online ? " · Synced" : ""}
           </span>
           <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
             <SelectTrigger className="h-11 w-[160px] text-base">
